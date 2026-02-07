@@ -48,13 +48,6 @@ CognitiveLoadAI/
 3. **Score Calculation** - Weighted combination of features
 4. **Recommendations** - Personalized study tips and chunking advice
 
-## 🚀 Deploy to Vercel
-
-1. Push this repo to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Click "Import Project"
-4. Select your GitHub repo
-5. Click Deploy - done!
 
 ## 🔒 Privacy
 
