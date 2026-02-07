@@ -5,13 +5,14 @@ A Streamlit web application that analyzes educational text to predict
 cognitive load and help students optimize their learning experience.
 
 Author: CognitiveLoad AI Team
-Version: 1.0.0
+Version: 2.0.0
 License: MIT
 
 Design Philosophy:
 - Ethical, transparent AI
 - No personal data storage
 - Educational focus - helping students learn better
+- Simple, student-friendly explanations
 """
 
 import streamlit as st
@@ -28,22 +29,10 @@ from plotly.subplots import make_subplots
 # ============================================================================
 # NLTK RESOURCE MANAGEMENT
 # ============================================================================
-# Download required NLTK data (runs once, cached thereafter)
 
 @st.cache_resource
 def download_nltk_resources():
-    """
-    Download all required NLTK resources for NLP processing.
-    Uses Streamlit caching to avoid repeated downloads.
-    
-    Resources needed:
-    - punkt: Tokenization
-    - punkt_tab: Updated tokenization models
-    - stopwords: Common word filtering
-    - wordnet: Lemmatization
-    - averaged_perceptron_tagger: POS tagging
-    - averaged_perceptron_tagger_eng: English POS tagger
-    """
+    """Download all required NLTK resources for NLP processing."""
     resources = [
         'punkt', 
         'punkt_tab',
@@ -72,42 +61,92 @@ from nltk import pos_tag
 # CONSTANTS AND CONFIGURATION
 # ============================================================================
 
-# Abstract noun suffixes - words ending with these are often abstract concepts
 ABSTRACT_SUFFIXES = [
     'tion', 'sion', 'ness', 'ment', 'ity', 'ence', 'ance', 
     'ship', 'dom', 'hood', 'ism', 'ology', 'phy', 'ics'
 ]
 
-# Technical/academic word patterns (common in educational texts)
 TECHNICAL_PATTERNS = [
     r'\b\w+ization\b', r'\b\w+ification\b', r'\b\w+ological\b',
     r'\b\w+ometric\b', r'\b\w+aneous\b', r'\b\w+itious\b'
 ]
 
-# Feature weights for cognitive load calculation
-# These weights are based on cognitive load theory research
 FEATURE_WEIGHTS = {
-    'sentence_length': 0.20,      # Longer sentences = higher load
-    'vocabulary_complexity': 0.25, # Complex vocabulary = higher load
-    'abstract_density': 0.20,      # Abstract concepts = higher load
-    'concept_repetition': -0.10,   # Repetition helps learning (negative weight)
-    'readability': 0.25            # Lower readability = higher load
+    'sentence_length': 0.20,
+    'vocabulary_complexity': 0.25,
+    'abstract_density': 0.20,
+    'concept_repetition': -0.10,
+    'readability': 0.25
 }
 
-# Cognitive load thresholds
 LOAD_THRESHOLDS = {
-    'low': 35,      # 0-35: Low cognitive load
-    'medium': 65,   # 36-65: Medium cognitive load
-    'high': 100     # 66-100: High cognitive load
+    'low': 35,
+    'medium': 65,
+    'high': 100
 }
 
-# Color scheme for the application
+# Light mode color scheme
 COLORS = {
-    'low': '#28a745',      # Green
-    'medium': '#ffc107',   # Yellow/Orange
-    'high': '#dc3545',     # Red
-    'primary': '#4a90d9',  # Blue
-    'secondary': '#6c757d' # Gray
+    'low': '#10b981',       # Emerald green
+    'medium': '#f59e0b',    # Amber
+    'high': '#ef4444',      # Red
+    'primary': '#3b82f6',   # Blue
+    'secondary': '#6b7280', # Gray
+    'background': '#ffffff',
+    'surface': '#f8fafc',
+    'text': '#1e293b',
+    'text_secondary': '#64748b'
+}
+
+# Simple word replacements for text simplification
+SIMPLE_WORD_MAP = {
+    'utilize': 'use',
+    'implement': 'do',
+    'facilitate': 'help',
+    'demonstrate': 'show',
+    'subsequently': 'then',
+    'consequently': 'so',
+    'nevertheless': 'but',
+    'furthermore': 'also',
+    'approximately': 'about',
+    'sufficient': 'enough',
+    'necessitate': 'need',
+    'initiate': 'start',
+    'terminate': 'end',
+    'obtain': 'get',
+    'require': 'need',
+    'possess': 'have',
+    'commence': 'begin',
+    'endeavor': 'try',
+    'ascertain': 'find out',
+    'elucidate': 'explain',
+    'exemplify': 'show',
+    'methodology': 'method',
+    'conceptualization': 'idea',
+    'reconceptualization': 'new way of thinking',
+    'epistemological': 'about knowledge',
+    'ramifications': 'effects',
+    'indeterminacy': 'uncertainty',
+    'paradigms': 'ways of thinking',
+    'instrumentalist': 'practical',
+    'ontology': 'nature of reality',
+    'formalism': 'formal rules',
+    'apparatus': 'tool',
+    'metaphysical': 'philosophical',
+    'phenomena': 'events',
+    'decoherence': 'loss of quantum effects',
+    'substrates': 'base materials',
+    'entanglement': 'connection',
+    'interpretive': 'understanding',
+    'assumptions': 'beliefs',
+    'conjugate': 'paired',
+    'simultaneously': 'at the same time',
+    'intrinsic': 'built-in',
+    'predictive': 'forecasting',
+    'capabilities': 'abilities',
+    'enzymatic': 'enzyme-based',
+    'chlorophyll': 'green plant chemical',
+    'photosynthesis': 'how plants make food from sunlight',
 }
 
 # ============================================================================
@@ -115,130 +154,35 @@ COLORS = {
 # ============================================================================
 
 class TextPreprocessor:
-    """
-    Handles all NLP preprocessing tasks for educational text analysis.
-    
-    This class provides methods for:
-    - Tokenization (word and sentence level)
-    - Stopword removal
-    - Lemmatization
-    - POS tagging
-    
-    All methods are designed to be transparent and explainable.
-    """
+    """Handles all NLP preprocessing tasks for educational text analysis."""
     
     def __init__(self):
-        """Initialize the preprocessor with NLTK components."""
         self.lemmatizer = WordNetLemmatizer()
         self.stop_words = set(stopwords.words('english'))
         
     def tokenize_sentences(self, text: str) -> List[str]:
-        """
-        Split text into individual sentences.
-        
-        Args:
-            text: Raw input text
-            
-        Returns:
-            List of sentence strings
-            
-        Example:
-            "Hello world. How are you?" -> ["Hello world.", "How are you?"]
-        """
-        # Clean the text first
         text = self._clean_text(text)
         return sent_tokenize(text)
     
     def tokenize_words(self, text: str) -> List[str]:
-        """
-        Split text into individual word tokens.
-        
-        Args:
-            text: Raw input text
-            
-        Returns:
-            List of word tokens (lowercase)
-        """
         text = self._clean_text(text)
         tokens = word_tokenize(text.lower())
-        # Filter to only alphabetic tokens
         return [token for token in tokens if token.isalpha()]
     
     def remove_stopwords(self, tokens: List[str]) -> List[str]:
-        """
-        Remove common English stopwords from token list.
-        
-        Stopwords are common words like "the", "is", "at" that don't
-        contribute much to meaning but add to processing load.
-        
-        Args:
-            tokens: List of word tokens
-            
-        Returns:
-            Filtered list without stopwords
-        """
         return [token for token in tokens if token.lower() not in self.stop_words]
     
     def lemmatize(self, tokens: List[str]) -> List[str]:
-        """
-        Reduce words to their base/dictionary form.
-        
-        Lemmatization helps identify concept repetition by normalizing
-        word forms (e.g., "running" -> "run", "studies" -> "study").
-        
-        Args:
-            tokens: List of word tokens
-            
-        Returns:
-            List of lemmatized tokens
-        """
         return [self.lemmatizer.lemmatize(token) for token in tokens]
     
     def get_pos_tags(self, tokens: List[str]) -> List[Tuple[str, str]]:
-        """
-        Get Part-of-Speech tags for each token.
-        
-        POS tags help identify nouns, verbs, adjectives, etc.
-        This is useful for finding abstract nouns.
-        
-        Args:
-            tokens: List of word tokens
-            
-        Returns:
-            List of (word, POS_tag) tuples
-        """
         return pos_tag(tokens)
     
     def _clean_text(self, text: str) -> str:
-        """
-        Clean and normalize input text.
-        
-        - Removes extra whitespace
-        - Normalizes line breaks
-        - Strips leading/trailing whitespace
-        """
-        # Replace multiple spaces/newlines with single space
         text = re.sub(r'\s+', ' ', text)
         return text.strip()
     
     def full_preprocess(self, text: str) -> Dict:
-        """
-        Perform complete preprocessing pipeline on text.
-        
-        Returns a dictionary with all preprocessing results for
-        transparency and debugging.
-        
-        Args:
-            text: Raw input text
-            
-        Returns:
-            Dictionary containing:
-            - sentences: List of sentences
-            - tokens: All word tokens
-            - tokens_no_stopwords: Tokens without stopwords
-            - lemmas: Lemmatized tokens
-            - pos_tags: POS-tagged tokens
-        """
         sentences = self.tokenize_sentences(text)
         tokens = self.tokenize_words(text)
         tokens_no_stopwords = self.remove_stopwords(tokens)
@@ -257,38 +201,104 @@ class TextPreprocessor:
         }
 
 # ============================================================================
+# TEXT SIMPLIFIER CLASS
+# ============================================================================
+
+class TextSimplifier:
+    """
+    Simplifies complex text into easier-to-understand language.
+    Uses word replacement and sentence restructuring.
+    """
+    
+    def __init__(self):
+        self.word_map = SIMPLE_WORD_MAP
+        self.preprocessor = TextPreprocessor()
+    
+    def simplify_text(self, text: str) -> Dict:
+        """
+        Simplify the input text and return both simplified version
+        and a list of changes made.
+        """
+        simplified = text
+        changes = []
+        
+        # Replace complex words with simpler alternatives
+        for complex_word, simple_word in self.word_map.items():
+            pattern = re.compile(re.escape(complex_word), re.IGNORECASE)
+            if pattern.search(simplified):
+                simplified = pattern.sub(simple_word, simplified)
+                changes.append({
+                    'original': complex_word,
+                    'simplified': simple_word,
+                    'reason': f'"{complex_word}" is a complex word'
+                })
+        
+        # Break up very long sentences
+        sentences = sent_tokenize(simplified)
+        new_sentences = []
+        
+        for sent in sentences:
+            words = word_tokenize(sent)
+            if len(words) > 25:
+                # Try to split at conjunctions or commas
+                parts = re.split(r'(?:,\s*(?:and|but|or|which|that|because|although|however)|\s+(?:and|but|or)\s+)', sent)
+                if len(parts) > 1:
+                    for part in parts:
+                        part = part.strip()
+                        if part and len(part) > 10:
+                            if not part[0].isupper():
+                                part = part[0].upper() + part[1:]
+                            if not part.endswith('.'):
+                                part += '.'
+                            new_sentences.append(part)
+                    changes.append({
+                        'original': sent[:50] + '...',
+                        'simplified': 'Split into shorter sentences',
+                        'reason': 'Sentence was too long'
+                    })
+                else:
+                    new_sentences.append(sent)
+            else:
+                new_sentences.append(sent)
+        
+        simplified = ' '.join(new_sentences)
+        
+        return {
+            'original': text,
+            'simplified': simplified,
+            'changes': changes,
+            'word_changes_count': len([c for c in changes if 'complex word' in c.get('reason', '')]),
+            'sentence_changes_count': len([c for c in changes if 'too long' in c.get('reason', '')])
+        }
+    
+    def get_simple_explanation(self, text: str, max_sentences: int = 3) -> str:
+        """
+        Generate a very simple summary/explanation of the text.
+        """
+        sentences = sent_tokenize(text)
+        
+        # Get the first few sentences as a base
+        if len(sentences) <= max_sentences:
+            base = ' '.join(sentences)
+        else:
+            base = ' '.join(sentences[:max_sentences])
+        
+        # Simplify this base
+        result = self.simplify_text(base)
+        return result['simplified']
+
+# ============================================================================
 # FEATURE EXTRACTION CLASS
 # ============================================================================
 
 class CognitiveFeatureExtractor:
-    """
-    Extracts cognitive load features from preprocessed text.
-    
-    Features extracted:
-    1. Average Sentence Length - Measures syntactic complexity
-    2. Vocabulary Complexity - Ratio of rare/technical words
-    3. Abstract Noun Density - Concentration of abstract concepts
-    4. Concept Repetition - How often key concepts are repeated
-    5. Readability Index - Flesch-Kincaid readability score
-    
-    Each feature is normalized to a 0-100 scale for consistency.
-    """
+    """Extracts cognitive load features from preprocessed text."""
     
     def __init__(self):
-        """Initialize the feature extractor."""
-        # Common English words (simplified frequency list)
-        # Words NOT in this list are considered "rare"
         self.common_words = self._load_common_words()
         
     def _load_common_words(self) -> set:
-        """
-        Load a set of common English words.
-        
-        In production, this would load from a frequency corpus.
-        Here we use NLTK stopwords + common academic words.
-        """
         common = set(stopwords.words('english'))
-        # Add more common words
         basic_words = {
             'make', 'made', 'take', 'took', 'give', 'gave', 'get', 'got',
             'know', 'knew', 'think', 'thought', 'see', 'saw', 'come', 'came',
@@ -309,344 +319,187 @@ class CognitiveFeatureExtractor:
         return common.union(basic_words)
     
     def calculate_avg_sentence_length(self, sentences: List[str]) -> Tuple[float, float]:
-        """
-        Calculate average number of words per sentence.
-        
-        Cognitive Load Theory: Longer sentences require more working memory
-        to process, as readers must hold more information before reaching
-        the sentence's conclusion.
-        
-        Args:
-            sentences: List of sentence strings
-            
-        Returns:
-            Tuple of (raw_value, normalized_score)
-            - raw_value: Average words per sentence
-            - normalized_score: 0-100 scale (higher = more complex)
-        """
         if not sentences:
             return 0.0, 0.0
-            
         lengths = [len(word_tokenize(sent)) for sent in sentences]
         avg_length = sum(lengths) / len(lengths)
-        
-        # Normalize: 10 words = low (0), 30+ words = high (100)
-        # Based on readability research suggesting 15-20 words is optimal
         normalized = min(100, max(0, (avg_length - 10) * 5))
-        
         return round(avg_length, 2), round(normalized, 2)
     
     def calculate_vocabulary_complexity(self, tokens: List[str]) -> Tuple[float, float]:
-        """
-        Calculate ratio of rare/technical words to total words.
-        
-        Vocabulary complexity increases cognitive load because readers
-        must work harder to decode unfamiliar terms.
-        
-        Args:
-            tokens: List of word tokens (lowercase)
-            
-        Returns:
-            Tuple of (raw_ratio, normalized_score)
-        """
         if not tokens:
             return 0.0, 0.0
-            
         rare_count = 0
         for token in tokens:
-            # Check if word is rare (not in common words)
             if token.lower() not in self.common_words:
                 rare_count += 1
-            # Check for technical patterns
             for pattern in TECHNICAL_PATTERNS:
                 if re.match(pattern, token, re.IGNORECASE):
-                    rare_count += 0.5  # Partial additional weight
+                    rare_count += 0.5
                     break
-                    
         ratio = rare_count / len(tokens)
-        
-        # Normalize: 0% rare = 0, 50%+ rare = 100
         normalized = min(100, ratio * 200)
-        
         return round(ratio * 100, 2), round(normalized, 2)
     
     def calculate_abstract_density(self, tokens: List[str], pos_tags: List[Tuple]) -> Tuple[float, float]:
-        """
-        Calculate density of abstract nouns in the text.
-        
-        Abstract concepts (like "democracy", "efficiency", "methodology")
-        are harder to visualize and require more cognitive effort than
-        concrete nouns (like "dog", "table", "book").
-        
-        Args:
-            tokens: List of word tokens
-            pos_tags: List of (word, POS) tuples
-            
-        Returns:
-            Tuple of (raw_density, normalized_score)
-        """
         if not tokens:
             return 0.0, 0.0
-            
         abstract_count = 0
-        
-        # Method 1: Check for abstract noun suffixes
         for token in tokens:
             for suffix in ABSTRACT_SUFFIXES:
                 if token.lower().endswith(suffix) and len(token) > len(suffix) + 2:
                     abstract_count += 1
                     break
-        
-        # Method 2: Check POS tags for nouns and evaluate
-        nouns = [word for word, tag in pos_tags if tag.startswith('NN')]
-        
         density = abstract_count / len(tokens) if tokens else 0
-        
-        # Normalize: 0% = 0, 20%+ = 100
         normalized = min(100, density * 500)
-        
         return round(density * 100, 2), round(normalized, 2)
     
     def calculate_concept_repetition(self, lemmas: List[str]) -> Tuple[float, float]:
-        """
-        Calculate how frequently key concepts are repeated.
-        
-        Repetition aids learning by reinforcing concepts. Higher repetition
-        of key terms typically REDUCES cognitive load (note the negative
-        weight in FEATURE_WEIGHTS).
-        
-        Args:
-            lemmas: List of lemmatized tokens (without stopwords)
-            
-        Returns:
-            Tuple of (repetition_ratio, normalized_score)
-        """
         if not lemmas:
             return 0.0, 0.0
-            
         word_freq = Counter(lemmas)
-        
-        # Find words that appear more than once
         repeated = sum(1 for count in word_freq.values() if count > 1)
         total_unique = len(word_freq)
-        
         if total_unique == 0:
             return 0.0, 0.0
-            
         repetition_ratio = repeated / total_unique
-        
-        # Normalize: 0% repetition = 0, 50%+ = 100
-        # Note: Higher repetition is GOOD for learning
         normalized = min(100, repetition_ratio * 200)
-        
         return round(repetition_ratio * 100, 2), round(normalized, 2)
     
     def calculate_readability(self, text: str, sentences: List[str], tokens: List[str]) -> Tuple[float, float]:
-        """
-        Calculate Flesch-Kincaid Reading Ease score.
-        
-        The Flesch-Kincaid formula considers:
-        - Average sentence length (words per sentence)
-        - Average syllables per word
-        
-        Score interpretation:
-        - 90-100: Very Easy (5th grade)
-        - 60-70: Standard (8th-9th grade)
-        - 30-50: Difficult (College)
-        - 0-30: Very Difficult (College graduate)
-        
-        Args:
-            text: Original text
-            sentences: List of sentences
-            tokens: List of word tokens
-            
-        Returns:
-            Tuple of (flesch_score, normalized_cognitive_load)
-        """
         if not sentences or not tokens:
             return 0.0, 50.0
-            
-        # Calculate average sentence length
         avg_sentence_length = len(tokens) / len(sentences)
-        
-        # Calculate average syllables per word
         total_syllables = sum(self._count_syllables(word) for word in tokens)
         avg_syllables = total_syllables / len(tokens) if tokens else 0
-        
-        # Flesch Reading Ease formula
         flesch_score = 206.835 - (1.015 * avg_sentence_length) - (84.6 * avg_syllables)
         flesch_score = max(0, min(100, flesch_score))
-        
-        # Convert to cognitive load (invert the score)
-        # Lower readability = Higher cognitive load
         cognitive_load = 100 - flesch_score
-        
         return round(flesch_score, 2), round(cognitive_load, 2)
     
     def _count_syllables(self, word: str) -> int:
-        """
-        Estimate syllable count for a word.
-        
-        Uses a simple vowel-counting heuristic:
-        - Count vowel groups
-        - Handle silent 'e'
-        - Minimum 1 syllable per word
-        """
         word = word.lower()
         vowels = 'aeiouy'
         count = 0
         prev_vowel = False
-        
         for char in word:
             is_vowel = char in vowels
             if is_vowel and not prev_vowel:
                 count += 1
             prev_vowel = is_vowel
-            
-        # Handle silent 'e'
         if word.endswith('e') and count > 1:
             count -= 1
-            
-        # Handle special endings
         if word.endswith('le') and len(word) > 2 and word[-3] not in vowels:
             count += 1
-            
         return max(1, count)
     
     def extract_all_features(self, preprocessed: Dict, original_text: str) -> Dict:
-        """
-        Extract all cognitive load features from preprocessed text.
-        
-        Args:
-            preprocessed: Dictionary from TextPreprocessor.full_preprocess()
-            original_text: Original input text
-            
-        Returns:
-            Dictionary containing all features with raw and normalized values
-        """
-        # Calculate each feature
-        sent_len_raw, sent_len_norm = self.calculate_avg_sentence_length(
-            preprocessed['sentences']
-        )
-        
-        vocab_raw, vocab_norm = self.calculate_vocabulary_complexity(
-            preprocessed['tokens']
-        )
-        
-        abstract_raw, abstract_norm = self.calculate_abstract_density(
-            preprocessed['tokens'],
-            preprocessed['pos_tags']
-        )
-        
-        rep_raw, rep_norm = self.calculate_concept_repetition(
-            preprocessed['lemmas']
-        )
-        
-        read_raw, read_norm = self.calculate_readability(
-            original_text,
-            preprocessed['sentences'],
-            preprocessed['tokens']
-        )
+        sent_len_raw, sent_len_norm = self.calculate_avg_sentence_length(preprocessed['sentences'])
+        vocab_raw, vocab_norm = self.calculate_vocabulary_complexity(preprocessed['tokens'])
+        abstract_raw, abstract_norm = self.calculate_abstract_density(preprocessed['tokens'], preprocessed['pos_tags'])
+        rep_raw, rep_norm = self.calculate_concept_repetition(preprocessed['lemmas'])
+        read_raw, read_norm = self.calculate_readability(original_text, preprocessed['sentences'], preprocessed['tokens'])
         
         return {
             'sentence_length': {
                 'raw': sent_len_raw,
                 'normalized': sent_len_norm,
                 'unit': 'words/sentence',
-                'description': 'Average number of words per sentence'
+                'description': 'How long each sentence is on average',
+                'simple_explanation': self._get_simple_feature_explanation('sentence_length', sent_len_norm)
             },
             'vocabulary_complexity': {
                 'raw': vocab_raw,
                 'normalized': vocab_norm,
-                'unit': '% rare words',
-                'description': 'Percentage of rare/technical vocabulary'
+                'unit': '% hard words',
+                'description': 'How many difficult words are used',
+                'simple_explanation': self._get_simple_feature_explanation('vocabulary_complexity', vocab_norm)
             },
             'abstract_density': {
                 'raw': abstract_raw,
                 'normalized': abstract_norm,
-                'unit': '% abstract nouns',
-                'description': 'Density of abstract concepts'
+                'unit': '% abstract ideas',
+                'description': 'How many abstract concepts (hard to picture)',
+                'simple_explanation': self._get_simple_feature_explanation('abstract_density', abstract_norm)
             },
             'concept_repetition': {
                 'raw': rep_raw,
                 'normalized': rep_norm,
-                'unit': '% repeated concepts',
-                'description': 'Frequency of concept reinforcement'
+                'unit': '% repeated ideas',
+                'description': 'How often key ideas are repeated (good for learning!)',
+                'simple_explanation': self._get_simple_feature_explanation('concept_repetition', rep_norm)
             },
             'readability': {
                 'raw': read_raw,
                 'normalized': read_norm,
-                'unit': 'Flesch score',
-                'description': 'Text readability (higher = easier)'
+                'unit': 'ease score',
+                'description': 'Overall how easy the text is to read',
+                'simple_explanation': self._get_simple_feature_explanation('readability', read_norm)
             }
         }
+    
+    def _get_simple_feature_explanation(self, feature: str, score: float) -> str:
+        """Generate a simple, student-friendly explanation for each feature."""
+        explanations = {
+            'sentence_length': {
+                'low': "✅ Sentences are short and easy to follow",
+                'medium': "📝 Sentences are medium length - stay focused",
+                'high': "⚠️ Very long sentences - take your time reading"
+            },
+            'vocabulary_complexity': {
+                'low': "✅ Uses everyday words you probably know",
+                'medium': "📝 Some tricky words - look them up if needed",
+                'high': "⚠️ Lots of hard words - keep a dictionary handy"
+            },
+            'abstract_density': {
+                'low': "✅ Talks about concrete, easy-to-picture things",
+                'medium': "📝 Mix of concrete and abstract ideas",
+                'high': "⚠️ Many abstract ideas - try to find real examples"
+            },
+            'concept_repetition': {
+                'low': "📝 Ideas aren't repeated much - take good notes",
+                'medium': "✅ Good amount of repetition to help you learn",
+                'high': "✅ Key ideas are repeated often - great for memory!"
+            },
+            'readability': {
+                'low': "✅ Easy to read - like a conversation",
+                'medium': "📝 Moderately challenging - normal textbook level",
+                'high': "⚠️ Dense and complex - read slowly and carefully"
+            }
+        }
+        
+        if score < 35:
+            level = 'low'
+        elif score < 65:
+            level = 'medium'
+        else:
+            level = 'high'
+            
+        return explanations.get(feature, {}).get(level, "")
 
 # ============================================================================
 # COGNITIVE LOAD CALCULATOR
 # ============================================================================
 
 class CognitiveLoadCalculator:
-    """
-    Calculates overall cognitive load score from extracted features.
-    
-    Uses a weighted scoring approach based on cognitive load theory.
-    The weights can be adjusted based on domain-specific requirements.
-    """
+    """Calculates overall cognitive load score from extracted features."""
     
     def __init__(self, weights: Dict[str, float] = None):
-        """
-        Initialize calculator with feature weights.
-        
-        Args:
-            weights: Dictionary mapping feature names to weights.
-                     Weights should sum to 1.0 for interpretability.
-        """
         self.weights = weights or FEATURE_WEIGHTS
         
     def calculate_score(self, features: Dict) -> float:
-        """
-        Calculate weighted cognitive load score.
-        
-        Formula:
-        score = Σ (feature_normalized × weight)
-        
-        Note: concept_repetition has negative weight because
-        repetition REDUCES cognitive load.
-        
-        Args:
-            features: Dictionary from CognitiveFeatureExtractor
-            
-        Returns:
-            Cognitive load score (0-100)
-        """
         score = 0.0
-        
         for feature_name, weight in self.weights.items():
             if feature_name in features:
                 normalized_value = features[feature_name]['normalized']
-                
-                # For concept_repetition (negative weight), 
-                # higher repetition = lower contribution to load
                 if weight < 0:
                     contribution = abs(weight) * (100 - normalized_value)
                 else:
                     contribution = weight * normalized_value
-                    
                 score += contribution
-                
-        # Ensure score is within bounds
         return round(max(0, min(100, score)), 1)
     
     def classify_load(self, score: float) -> str:
-        """
-        Classify cognitive load level based on score.
-        
-        Args:
-            score: Cognitive load score (0-100)
-            
-        Returns:
-            Classification string: "Low", "Medium", or "High"
-        """
         if score <= LOAD_THRESHOLDS['low']:
             return "Low"
         elif score <= LOAD_THRESHOLDS['medium']:
@@ -655,107 +508,93 @@ class CognitiveLoadCalculator:
             return "High"
     
     def get_load_color(self, classification: str) -> str:
-        """Get color code for load classification."""
         return COLORS.get(classification.lower(), COLORS['secondary'])
     
-    def get_interpretation(self, score: float, classification: str) -> str:
+    def get_simple_interpretation(self, score: float, classification: str, features: Dict) -> Dict:
         """
-        Generate human-readable interpretation of the score.
-        
-        Args:
-            score: Cognitive load score
-            classification: Load classification
-            
-        Returns:
-            Interpretation text for students
+        Generate a simple, student-friendly interpretation.
+        Returns a dictionary with different sections.
         """
-        interpretations = {
-            "Low": f"""
-                **Great news!** This text has a low cognitive load score of {score}/100.
-                
-                This means:
-                - The content is relatively easy to process
-                - Sentence structures are manageable
-                - Vocabulary is accessible
-                - You should be able to study this in longer sessions
-                
-                💡 **Recommendation:** You can study this material comfortably 
-                for 45-60 minutes before taking a break.
-            """,
-            "Medium": f"""
-                **Moderate complexity detected.** This text has a medium cognitive 
-                load score of {score}/100.
-                
-                This means:
-                - The content requires focused attention
-                - Some complex concepts or vocabulary present
-                - Active reading strategies will help
-                
-                💡 **Recommendation:** Study in 25-30 minute intervals 
-                (Pomodoro technique). Take notes to reinforce understanding.
-            """,
-            "High": f"""
-                **Challenging content ahead!** This text has a high cognitive 
-                load score of {score}/100.
-                
-                This means:
-                - Dense, complex material requiring significant mental effort
-                - May contain technical vocabulary or abstract concepts
-                - Multiple readings may be needed
-                
-                💡 **Recommendation:** Break into 15-20 minute study sessions.
-                Use active recall and summarization. Consider finding 
-                supplementary resources.
-            """
+        # Main message based on classification
+        main_messages = {
+            "Low": {
+                "emoji": "🎉",
+                "title": "Easy to Learn!",
+                "summary": f"Good news! This text scored {score}/100 on difficulty. It's pretty straightforward.",
+                "meaning": "This means the text uses simple words and short sentences. You should be able to understand it without too much trouble."
+            },
+            "Medium": {
+                "emoji": "📚",
+                "title": "Medium Difficulty",
+                "summary": f"This text scored {score}/100 on difficulty. It needs some focus.",
+                "meaning": "The text has some complex parts. You'll need to pay attention and maybe re-read some sections."
+            },
+            "High": {
+                "emoji": "🧠",
+                "title": "Challenging Content",
+                "summary": f"Heads up! This text scored {score}/100 on difficulty. It's quite complex.",
+                "meaning": "This is dense material with hard words and complex ideas. Don't worry - just take it slow and break it into small pieces."
+            }
         }
-        return interpretations.get(classification, "Unable to interpret score.")
+        
+        # Tips based on classification
+        tips = {
+            "Low": [
+                "📖 You can read longer sections at once",
+                "⏱️ 45-60 minute study sessions work well",
+                "✍️ Light note-taking should be enough"
+            ],
+            "Medium": [
+                "📖 Read in 25-30 minute chunks (Pomodoro style)",
+                "✍️ Take notes on key points",
+                "🔄 Review what you read before moving on",
+                "❓ Write down words you don't know"
+            ],
+            "High": [
+                "📖 Read in 15-20 minute chunks only",
+                "☕ Take a 10-minute break between chunks",
+                "✍️ Summarize each paragraph in your own words",
+                "🎥 Look for YouTube videos explaining the same topic",
+                "👥 Discuss with classmates or teachers"
+            ]
+        }
+        
+        msg = main_messages.get(classification, main_messages["Medium"])
+        
+        return {
+            "emoji": msg["emoji"],
+            "title": msg["title"],
+            "summary": msg["summary"],
+            "meaning": msg["meaning"],
+            "tips": tips.get(classification, tips["Medium"]),
+            "score": score,
+            "classification": classification
+        }
 
 # ============================================================================
 # EXAM MODE ANALYZER
 # ============================================================================
 
 class ExamModeAnalyzer:
-    """
-    Analyzes text to identify high-risk sections for exam preparation.
-    
-    "High-risk" sections are paragraphs or sentences with particularly
-    high cognitive load that students should pay extra attention to.
-    """
+    """Analyzes text to identify high-risk sections for exam preparation."""
     
     def __init__(self):
-        """Initialize the exam mode analyzer."""
         self.preprocessor = TextPreprocessor()
         self.extractor = CognitiveFeatureExtractor()
         self.calculator = CognitiveLoadCalculator()
         
     def analyze_sections(self, text: str) -> List[Dict]:
-        """
-        Analyze text by sections (paragraphs) and identify high-risk areas.
-        
-        Args:
-            text: Original input text
-            
-        Returns:
-            List of section analysis dictionaries
-        """
-        # Split into paragraphs
         paragraphs = [p.strip() for p in text.split('\n\n') if p.strip()]
-        
         if not paragraphs:
             paragraphs = [text]
-            
         sections = []
-        
         for i, para in enumerate(paragraphs):
-            if len(para) < 20:  # Skip very short paragraphs
+            if len(para) < 20:
                 continue
-                
-            # Analyze this paragraph
             preprocessed = self.preprocessor.full_preprocess(para)
             features = self.extractor.extract_all_features(preprocessed, para)
             score = self.calculator.calculate_score(features)
             classification = self.calculator.classify_load(score)
-            
             sections.append({
                 'index': i + 1,
                 'text': para[:200] + '...' if len(para) > 200 else para,
@@ -765,47 +604,50 @@ class ExamModeAnalyzer:
                 'word_count': preprocessed['word_count'],
                 'is_high_risk': classification == "High" or score > 60
             })
-            
         return sections
     
     def get_high_risk_sections(self, sections: List[Dict]) -> List[Dict]:
-        """Filter to only high-risk sections."""
         return [s for s in sections if s['is_high_risk']]
     
-    def generate_exam_recommendations(self, sections: List[Dict]) -> List[str]:
-        """
-        Generate study recommendations based on section analysis.
-        
-        Args:
-            sections: List of analyzed sections
-            
-        Returns:
-            List of recommendation strings
-        """
+    def generate_simple_recommendations(self, sections: List[Dict]) -> List[Dict]:
+        """Generate simple, actionable recommendations."""
         recommendations = []
         high_risk = self.get_high_risk_sections(sections)
         
         if not high_risk:
-            recommendations.append("✅ No high-risk sections identified. "
-                                 "The text is relatively uniform in difficulty.")
+            recommendations.append({
+                "icon": "✅",
+                "title": "Looking Good!",
+                "text": "No super-hard sections found. The difficulty is pretty even throughout."
+            })
         else:
-            recommendations.append(f"⚠️ Found {len(high_risk)} high-risk section(s) "
-                                 "requiring extra attention.")
+            recommendations.append({
+                "icon": "⚠️",
+                "title": f"Found {len(high_risk)} Tricky Part(s)",
+                "text": "These sections need extra attention. Don't rush through them!"
+            })
             
-            for section in high_risk[:3]:  # Top 3 most important
-                recommendations.append(
-                    f"📍 Section {section['index']} (Score: {section['score']}): "
-                    f"Consider re-reading and making notes."
-                )
-                
-        # Add general recommendations
+            for i, section in enumerate(high_risk[:3]):
+                recommendations.append({
+                    "icon": "📍",
+                    "title": f"Section {section['index']} is Hard",
+                    "text": f"Difficulty: {section['score']}/100. Read this part slowly and take notes."
+                })
+        
         avg_score = sum(s['score'] for s in sections) / len(sections) if sections else 0
         
         if avg_score > 70:
-            recommendations.append("📚 Overall high complexity - consider finding "
-                                 "supplementary materials or video explanations.")
+            recommendations.append({
+                "icon": "💡",
+                "title": "Try Other Resources",
+                "text": "This text is quite complex. Look for YouTube videos or simpler explanations online."
+            })
         elif avg_score > 50:
-            recommendations.append("📝 Create flashcards for key concepts to aid retention.")
+            recommendations.append({
+                "icon": "📝",
+                "title": "Make Flashcards",
+                "text": "Create flashcards for key terms to help you remember them."
+            })
             
         return recommendations
 
@@ -814,46 +656,20 @@ class ExamModeAnalyzer:
 # ============================================================================
 
 class AdaptiveChunker:
-    """
-    Provides recommendations for breaking up study sessions based on
-    cognitive load analysis.
-    
-    Uses research-based guidelines:
-    - Low load: 45-60 minute sessions
-    - Medium load: 25-30 minute sessions (Pomodoro)
-    - High load: 15-20 minute sessions
-    """
+    """Provides recommendations for breaking up study sessions."""
     
     def __init__(self):
-        """Initialize the adaptive chunker."""
         self.session_lengths = {
             'Low': (45, 60),
             'Medium': (25, 30),
             'High': (15, 20)
         }
-        
-        # Average reading speed: ~200-250 words per minute for educational text
-        self.reading_speed = 200  # Conservative estimate
+        self.reading_speed = 200
         
     def calculate_study_plan(self, word_count: int, classification: str) -> Dict:
-        """
-        Generate a study plan based on text length and cognitive load.
-        
-        Args:
-            word_count: Total word count of the text
-            classification: Cognitive load classification
-            
-        Returns:
-            Dictionary with study plan details
-        """
-        min_session, max_session = self.session_lengths.get(
-            classification, (25, 30)
-        )
-        
-        # Calculate total reading time
+        min_session, max_session = self.session_lengths.get(classification, (25, 30))
         reading_minutes = word_count / self.reading_speed
         
-        # Add processing time based on load
         processing_multiplier = {
             'Low': 1.2,
             'Medium': 1.5,
@@ -861,228 +677,103 @@ class AdaptiveChunker:
         }.get(classification, 1.5)
         
         total_study_time = reading_minutes * processing_multiplier
-        
-        # Calculate number of sessions
         avg_session = (min_session + max_session) / 2
         num_sessions = max(1, round(total_study_time / avg_session))
-        
-        # Calculate words per session
         words_per_session = word_count / num_sessions
         
-        # Calculate break durations
         break_duration = {
             'Low': 5,
             'Medium': 5,
             'High': 10
         }.get(classification, 5)
         
+        total_with_breaks = total_study_time + (num_sessions - 1) * break_duration
+        
         return {
             'total_words': word_count,
-            'estimated_reading_time': round(reading_minutes, 1),
-            'estimated_study_time': round(total_study_time, 1),
-            'recommended_session_length': f"{min_session}-{max_session} minutes",
-            'number_of_sessions': num_sessions,
+            'reading_time_mins': round(reading_minutes, 1),
+            'study_time_mins': round(total_study_time, 1),
+            'session_length_min': min_session,
+            'session_length_max': max_session,
+            'num_sessions': num_sessions,
             'words_per_session': round(words_per_session),
-            'break_duration': f"{break_duration} minutes",
-            'total_with_breaks': round(total_study_time + (num_sessions - 1) * break_duration, 1)
+            'break_mins': break_duration,
+            'total_time_mins': round(total_with_breaks, 1)
         }
     
-    def find_pause_points(self, text: str, num_chunks: int) -> List[int]:
-        """
-        Find natural pause points in the text for chunking.
-        
-        Prefers paragraph breaks, then sentence endings.
-        
-        Args:
-            text: Original text
-            num_chunks: Desired number of chunks
-            
-        Returns:
-            List of character positions for pause points
-        """
-        if num_chunks <= 1:
-            return []
-            
-        # Split into paragraphs first
-        paragraphs = text.split('\n')
-        
-        chunk_size = len(text) // num_chunks
-        pause_points = []
-        current_pos = 0
-        
-        for i in range(1, num_chunks):
-            target_pos = i * chunk_size
-            
-            # Find nearest paragraph break
-            best_break = target_pos
-            
-            # Look for paragraph breaks within ±20% of target
-            search_range = chunk_size // 5
-            
-            for j in range(target_pos - search_range, target_pos + search_range):
-                if 0 < j < len(text):
-                    if text[j] == '\n' or (j > 0 and text[j-1:j+1] == '. '):
-                        best_break = j
-                        break
-                        
-            pause_points.append(best_break)
-            
-        return pause_points
-    
-    def get_chunked_text(self, text: str, pause_points: List[int]) -> List[str]:
-        """
-        Split text at pause points.
-        
-        Args:
-            text: Original text
-            pause_points: List of character positions
-            
-        Returns:
-            List of text chunks
-        """
-        if not pause_points:
-            return [text]
-            
-        chunks = []
-        prev_point = 0
-        
-        for point in pause_points:
-            chunks.append(text[prev_point:point].strip())
-            prev_point = point
-            
-        chunks.append(text[prev_point:].strip())
-        
-        return [c for c in chunks if c]  # Remove empty chunks
+    def format_time(self, minutes: float) -> str:
+        """Format minutes into a readable string."""
+        if minutes < 1:
+            return "Less than 1 min"
+        elif minutes < 60:
+            return f"{int(minutes)} min"
+        else:
+            hours = int(minutes // 60)
+            mins = int(minutes % 60)
+            if mins == 0:
+                return f"{hours} hr"
+            return f"{hours} hr {mins} min"
 
 # ============================================================================
-# VISUALIZATION HELPERS
+# VISUALIZATION HELPERS (Light Mode)
 # ============================================================================
 
 def create_gauge_chart(score: float, classification: str) -> go.Figure:
-    """
-    Create a gauge chart for the cognitive load score.
-    
-    Args:
-        score: Cognitive load score (0-100)
-        classification: Load classification
-        
-    Returns:
-        Plotly figure object
-    """
+    """Create a clean, light-mode gauge chart."""
     color = COLORS.get(classification.lower(), COLORS['primary'])
     
     fig = go.Figure(go.Indicator(
-        mode="gauge+number+delta",
+        mode="gauge+number",
         value=score,
+        number={'suffix': '/100', 'font': {'size': 40, 'color': COLORS['text']}},
         domain={'x': [0, 1], 'y': [0, 1]},
-        title={'text': "Cognitive Load Score", 'font': {'size': 24}},
-        delta={'reference': 50, 'increasing': {'color': COLORS['high']}, 
-               'decreasing': {'color': COLORS['low']}},
+        title={'text': "Difficulty Score", 'font': {'size': 20, 'color': COLORS['text']}},
         gauge={
-            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "darkgray"},
-            'bar': {'color': color},
-            'bgcolor': "white",
-            'borderwidth': 2,
-            'bordercolor': "gray",
+            'axis': {
+                'range': [0, 100], 
+                'tickwidth': 2, 
+                'tickcolor': COLORS['text_secondary'],
+                'tickfont': {'color': COLORS['text_secondary']}
+            },
+            'bar': {'color': color, 'thickness': 0.8},
+            'bgcolor': COLORS['surface'],
+            'borderwidth': 0,
             'steps': [
-                {'range': [0, LOAD_THRESHOLDS['low']], 'color': '#d4edda'},
-                {'range': [LOAD_THRESHOLDS['low'], LOAD_THRESHOLDS['medium']], 
-                 'color': '#fff3cd'},
-                {'range': [LOAD_THRESHOLDS['medium'], 100], 'color': '#f8d7da'}
+                {'range': [0, LOAD_THRESHOLDS['low']], 'color': '#dcfce7'},
+                {'range': [LOAD_THRESHOLDS['low'], LOAD_THRESHOLDS['medium']], 'color': '#fef3c7'},
+                {'range': [LOAD_THRESHOLDS['medium'], 100], 'color': '#fee2e2'}
             ],
-            'threshold': {
-                'line': {'color': "red", 'width': 4},
-                'thickness': 0.75,
-                'value': score
-            }
         }
     ))
     
     fig.update_layout(
-        height=300,
-        margin=dict(l=20, r=20, t=50, b=20),
+        height=280,
+        margin=dict(l=30, r=30, t=60, b=20),
         paper_bgcolor='rgba(0,0,0,0)',
-        font={'color': '#333', 'family': 'Arial'}
-    )
-    
-    return fig
-
-def create_feature_radar_chart(features: Dict) -> go.Figure:
-    """
-    Create a radar chart showing feature breakdown.
-    
-    Args:
-        features: Dictionary of extracted features
-        
-    Returns:
-        Plotly figure object
-    """
-    categories = []
-    values = []
-    
-    for feature_name, feature_data in features.items():
-        # Clean up feature name for display
-        display_name = feature_name.replace('_', ' ').title()
-        categories.append(display_name)
-        values.append(feature_data['normalized'])
-    
-    # Close the radar chart
-    categories.append(categories[0])
-    values.append(values[0])
-    
-    fig = go.Figure()
-    
-    fig.add_trace(go.Scatterpolar(
-        r=values,
-        theta=categories,
-        fill='toself',
-        fillcolor='rgba(74, 144, 217, 0.3)',
-        line=dict(color=COLORS['primary'], width=2),
-        name='Feature Scores'
-    ))
-    
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                tickfont=dict(size=10)
-            )
-        ),
-        showlegend=False,
-        title=dict(
-            text="Feature Analysis Radar",
-            font=dict(size=18)
-        ),
-        height=400,
-        margin=dict(l=80, r=80, t=80, b=40),
-        paper_bgcolor='rgba(0,0,0,0)'
+        plot_bgcolor='rgba(0,0,0,0)',
+        font={'color': COLORS['text'], 'family': 'Inter, system-ui, sans-serif'}
     )
     
     return fig
 
 def create_feature_bar_chart(features: Dict) -> go.Figure:
-    """
-    Create a horizontal bar chart of feature values.
-    
-    Args:
-        features: Dictionary of extracted features
-        
-    Returns:
-        Plotly figure object
-    """
+    """Create a clean horizontal bar chart."""
     feature_names = []
-    raw_values = []
     normalized_values = []
     colors = []
+    simple_names = {
+        'sentence_length': 'Sentence Length',
+        'vocabulary_complexity': 'Hard Words',
+        'abstract_density': 'Abstract Ideas',
+        'concept_repetition': 'Repetition (Good!)',
+        'readability': 'Reading Difficulty'
+    }
     
     for feature_name, feature_data in features.items():
-        display_name = feature_name.replace('_', ' ').title()
+        display_name = simple_names.get(feature_name, feature_name.replace('_', ' ').title())
         feature_names.append(display_name)
-        raw_values.append(f"{feature_data['raw']} {feature_data['unit']}")
         normalized_values.append(feature_data['normalized'])
         
-        # Color based on normalized value
         if feature_data['normalized'] < 35:
             colors.append(COLORS['low'])
         elif feature_data['normalized'] < 65:
@@ -1096,47 +787,46 @@ def create_feature_bar_chart(features: Dict) -> go.Figure:
         y=feature_names,
         x=normalized_values,
         orientation='h',
-        marker=dict(color=colors),
-        text=raw_values,
-        textposition='auto',
-        hovertemplate='%{y}: %{x:.1f}/100<br>Raw: %{text}<extra></extra>'
+        marker=dict(
+            color=colors,
+            line=dict(width=0)
+        ),
+        text=[f"{v:.0f}" for v in normalized_values],
+        textposition='outside',
+        textfont=dict(size=14, color=COLORS['text']),
+        hovertemplate='%{y}: %{x:.0f}/100<extra></extra>'
     ))
     
     fig.update_layout(
-        title=dict(
-            text="Feature Breakdown",
-            font=dict(size=18)
-        ),
         xaxis=dict(
-            title="Normalized Score (0-100)",
-            range=[0, 100]
+            title="Score (0-100)",
+            range=[0, 110],
+            gridcolor='#e2e8f0',
+            zerolinecolor='#e2e8f0',
+            tickfont=dict(color=COLORS['text_secondary'])
         ),
-        yaxis=dict(title=""),
-        height=350,
-        margin=dict(l=150, r=20, t=50, b=40),
+        yaxis=dict(
+            title="",
+            tickfont=dict(size=13, color=COLORS['text'])
+        ),
+        height=300,
+        margin=dict(l=130, r=50, t=20, b=50),
         paper_bgcolor='rgba(0,0,0,0)',
-        showlegend=False
+        plot_bgcolor='rgba(0,0,0,0)',
+        showlegend=False,
+        font={'family': 'Inter, system-ui, sans-serif'}
     )
     
     return fig
 
-def create_section_heatmap(sections: List[Dict]) -> go.Figure:
-    """
-    Create a heatmap visualization of section complexity.
-    
-    Args:
-        sections: List of analyzed sections
-        
-    Returns:
-        Plotly figure object
-    """
+def create_section_chart(sections: List[Dict]) -> go.Figure:
+    """Create a bar chart for section-by-section analysis."""
     if not sections:
         return None
         
-    section_labels = [f"Section {s['index']}" for s in sections]
+    section_labels = [f"Part {s['index']}" for s in sections]
     scores = [s['score'] for s in sections]
     
-    # Create color scale
     colors = []
     for score in scores:
         if score < LOAD_THRESHOLDS['low']:
@@ -1151,22 +841,29 @@ def create_section_heatmap(sections: List[Dict]) -> go.Figure:
     fig.add_trace(go.Bar(
         x=section_labels,
         y=scores,
-        marker=dict(color=colors),
+        marker=dict(color=colors, line=dict(width=0)),
         text=[f"{s:.0f}" for s in scores],
         textposition='outside',
-        hovertemplate='%{x}<br>Score: %{y:.1f}<extra></extra>'
+        textfont=dict(size=12, color=COLORS['text']),
+        hovertemplate='%{x}<br>Difficulty: %{y:.0f}/100<extra></extra>'
     ))
     
     fig.update_layout(
-        title=dict(
-            text="Section-by-Section Cognitive Load",
-            font=dict(size=18)
+        xaxis=dict(
+            title="",
+            tickfont=dict(color=COLORS['text_secondary'])
         ),
-        xaxis=dict(title=""),
-        yaxis=dict(title="Cognitive Load Score", range=[0, 110]),
-        height=300,
-        margin=dict(l=60, r=20, t=50, b=40),
-        paper_bgcolor='rgba(0,0,0,0)'
+        yaxis=dict(
+            title="Difficulty Score",
+            range=[0, 110],
+            gridcolor='#e2e8f0',
+            tickfont=dict(color=COLORS['text_secondary'])
+        ),
+        height=280,
+        margin=dict(l=60, r=20, t=20, b=40),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font={'family': 'Inter, system-ui, sans-serif'}
     )
     
     return fig
@@ -1176,7 +873,7 @@ def create_section_heatmap(sections: List[Dict]) -> go.Figure:
 # ============================================================================
 
 SAMPLE_TEXTS = {
-    "Easy (Low Load)": """
+    "📗 Easy Text": """
 The sun is a star. It gives us light and heat. Plants need the sun to grow. 
 We see the sun in the sky during the day. At night, we see the moon and stars.
 
@@ -1187,7 +884,7 @@ Many animals wake up when the sun rises. They sleep when it sets. This is
 called a day and night cycle. The cycle helps all living things.
 """,
     
-    "Medium (Moderate Load)": """
+    "📙 Medium Text": """
 Photosynthesis is the process by which plants convert light energy into chemical 
 energy. This process occurs primarily in the leaves, where chlorophyll captures 
 sunlight and uses it to transform carbon dioxide and water into glucose and oxygen.
@@ -1202,7 +899,7 @@ into glucose through a series of enzymatic reactions. This glucose serves as
 the primary energy source for the plant and forms the base of most food chains.
 """,
     
-    "Hard (High Load)": """
+    "📕 Hard Text": """
 The epistemological ramifications of quantum mechanical indeterminacy necessitate 
 a fundamental reconceptualization of classical causality paradigms. Heisenberg's 
 uncertainty principle demonstrates that conjugate variables such as position and 
@@ -1229,14 +926,9 @@ problem without additional interpretive assumptions.
 # ============================================================================
 
 def main():
-    """
-    Main function to run the CognitiveLoad AI Streamlit application.
-    """
+    """Main function to run the CognitiveLoad AI Streamlit application."""
     
-    # ========================================================================
-    # PAGE CONFIGURATION
-    # ========================================================================
-    
+    # Page Configuration
     st.set_page_config(
         page_title="CognitiveLoad AI",
         page_icon="🧠",
@@ -1244,561 +936,813 @@ def main():
         initial_sidebar_state="expanded"
     )
     
-    # ========================================================================
-    # CUSTOM CSS STYLING
-    # ========================================================================
+    # Initialize theme in session state
+    if 'dark_mode' not in st.session_state:
+        st.session_state.dark_mode = False
     
-    st.markdown("""
+    # Theme-aware CSS
+    is_dark = st.session_state.dark_mode
+    
+    # Define theme colors
+    if is_dark:
+        theme = {
+            'bg_primary': '#0f172a',
+            'bg_secondary': '#1e293b',
+            'bg_card': '#1e293b',
+            'bg_surface': '#334155',
+            'text_primary': '#f1f5f9',
+            'text_secondary': '#94a3b8',
+            'text_muted': '#64748b',
+            'border': '#334155',
+            'accent': '#3b82f6',
+            'accent_secondary': '#8b5cf6',
+            'low_bg': '#064e3b',
+            'low_text': '#6ee7b7',
+            'medium_bg': '#78350f',
+            'medium_text': '#fcd34d',
+            'high_bg': '#7f1d1d',
+            'high_text': '#fca5a5',
+            'simplified_bg': '#064e3b',
+            'simplified_border': '#059669',
+            'simplified_title': '#6ee7b7',
+            'tip_bg': '#1e3a5f',
+            'tip_border': '#3b82f6',
+            'input_bg': '#1e293b',
+            'input_border': '#475569',
+        }
+    else:
+        theme = {
+            'bg_primary': '#f8fafc',
+            'bg_secondary': '#f1f5f9',
+            'bg_card': '#ffffff',
+            'bg_surface': '#f8fafc',
+            'text_primary': '#1e293b',
+            'text_secondary': '#475569',
+            'text_muted': '#64748b',
+            'border': '#e2e8f0',
+            'accent': '#3b82f6',
+            'accent_secondary': '#8b5cf6',
+            'low_bg': '#dcfce7',
+            'low_text': '#166534',
+            'medium_bg': '#fef3c7',
+            'medium_text': '#92400e',
+            'high_bg': '#fee2e2',
+            'high_text': '#991b1b',
+            'simplified_bg': '#ecfdf5',
+            'simplified_border': '#bbf7d0',
+            'simplified_title': '#166534',
+            'tip_bg': '#eff6ff',
+            'tip_border': '#bfdbfe',
+            'input_bg': '#ffffff',
+            'input_border': '#e2e8f0',
+        }
+    
+    # Dynamic CSS based on theme
+    st.markdown(f"""
     <style>
-        /* Main container styling */
-        .main-header {
+        /* Import Google Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        /* Global styles */
+        * {{
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }}
+        
+        /* Main background */
+        .stApp {{
+            background: linear-gradient(180deg, {theme['bg_primary']} 0%, {theme['bg_secondary']} 100%);
+        }}
+        
+        /* All text visibility */
+        .stApp, .stApp p, .stApp span, .stApp label, .stApp div {{
+            color: {theme['text_primary']} !important;
+        }}
+        
+        .stMarkdown p, .stMarkdown span, .stMarkdown li {{
+            color: {theme['text_primary']} !important;
+        }}
+        
+        /* Header styling */
+        .main-header {{
             text-align: center;
-            padding: 1rem 0;
-            margin-bottom: 2rem;
-        }
+            padding: 2rem 0;
+            margin-bottom: 1rem;
+        }}
         
-        .main-header h1 {
-            color: #4a90d9;
-            font-size: 2.5rem;
+        .main-header h1 {{
+            background: linear-gradient(135deg, {theme['accent']} 0%, {theme['accent_secondary']} 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.8rem;
+            font-weight: 700;
             margin-bottom: 0.5rem;
-        }
+        }}
         
-        .main-header p {
-            color: #666;
+        .main-header p {{
+            color: {theme['text_secondary']} !important;
             font-size: 1.1rem;
-        }
+            font-weight: 400;
+        }}
         
         /* Card styling */
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .result-card {{
+            background: {theme['bg_card']};
+            border-radius: 16px;
             padding: 1.5rem;
-            border-radius: 10px;
-            color: white;
-            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
             margin-bottom: 1rem;
-        }
+            border: 1px solid {theme['border']};
+        }}
         
-        .metric-card h3 {
-            margin: 0;
-            font-size: 2rem;
-        }
+        .result-card h3 {{
+            color: {theme['text_primary']} !important;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }}
         
-        .metric-card p {
-            margin: 0.5rem 0 0 0;
-            opacity: 0.9;
-        }
+        .result-card p, .result-card span {{
+            color: {theme['text_primary']} !important;
+        }}
         
-        /* Status badges */
-        .status-low {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            display: inline-block;
-            font-weight: bold;
-        }
+        /* Score badge styles */
+        .score-badge {{
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }}
         
-        .status-medium {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            display: inline-block;
-            font-weight: bold;
-        }
+        .score-badge.low {{
+            background: {theme['low_bg']};
+            color: {theme['low_text']} !important;
+        }}
         
-        .status-high {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            display: inline-block;
-            font-weight: bold;
-        }
+        .score-badge.medium {{
+            background: {theme['medium_bg']};
+            color: {theme['medium_text']} !important;
+        }}
         
-        /* Info boxes */
-        .info-box {
-            background-color: #e7f3ff;
-            border-left: 4px solid #4a90d9;
+        .score-badge.high {{
+            background: {theme['high_bg']};
+            color: {theme['high_text']} !important;
+        }}
+        
+        /* Study plan card */
+        .study-plan-item {{
+            background: {theme['bg_surface']};
+            border-radius: 12px;
             padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 8px 8px 0;
-        }
+            margin-bottom: 0.75rem;
+            border-left: 4px solid {theme['accent']};
+        }}
         
-        .warning-box {
-            background-color: #fff3e0;
-            border-left: 4px solid #ff9800;
+        .study-plan-item .value {{
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: {theme['text_primary']} !important;
+        }}
+        
+        .study-plan-item .label {{
+            font-size: 0.875rem;
+            color: {theme['text_secondary']} !important;
+        }}
+        
+        /* Tip cards */
+        .tip-card {{
+            background: {theme['tip_bg']};
+            border-radius: 12px;
             padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 0 8px 8px 0;
-        }
+            margin-bottom: 0.5rem;
+            border: 1px solid {theme['tip_border']};
+        }}
         
-        /* Feature explanation cards */
-        .feature-card {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+        .tip-card p, .tip-card span {{
+            color: {theme['text_primary']} !important;
+        }}
+        
+        .tip-card .icon {{
+            font-size: 1.25rem;
+            margin-right: 0.5rem;
+        }}
+        
+        /* Feature explanation */
+        .feature-explanation {{
+            background: {theme['bg_surface']};
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: {theme['text_secondary']} !important;
+        }}
+        
+        /* Simplified text box */
+        .simplified-box {{
+            background: {theme['simplified_bg']};
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid {theme['simplified_border']};
+            margin: 1rem 0;
+        }}
+        
+        .simplified-box h4 {{
+            color: {theme['simplified_title']} !important;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }}
+        
+        .simplified-box p {{
+            color: {theme['text_primary']} !important;
+            line-height: 1.7;
+        }}
+        
+        /* Word change badge */
+        .word-change {{
+            display: inline-flex;
+            align-items: center;
+            background: {theme['bg_card']};
+            border-radius: 6px;
+            padding: 0.25rem 0.5rem;
+            margin: 0.25rem;
+            font-size: 0.8rem;
+            border: 1px solid {theme['border']};
+        }}
+        
+        .word-change .old {{
+            color: #ef4444 !important;
+            text-decoration: line-through;
+            margin-right: 0.25rem;
+        }}
+        
+        .word-change .arrow {{
+            color: {theme['text_muted']} !important;
+            margin: 0 0.25rem;
+        }}
+        
+        .word-change .new {{
+            color: #10b981 !important;
+            font-weight: 500;
+        }}
+        
+        /* Section risk badge */
+        .section-risk {{
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }}
+        
+        .section-risk.high {{
+            background: {theme['high_bg']};
+            color: {theme['high_text']} !important;
+        }}
+        
+        .section-risk.ok {{
+            background: {theme['low_bg']};
+            color: {theme['low_text']} !important;
+        }}
+        
+        /* Hide Streamlit elements */
+        #MainMenu {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        .stDeployButton {{display: none;}}
+        
+        /* Text area styling */
+        .stTextArea textarea {{
+            font-size: 15px;
+            line-height: 1.7;
+            border-radius: 12px;
+            border: 2px solid {theme['input_border']};
+            padding: 1rem;
+            background: {theme['input_bg']};
+            color: {theme['text_primary']} !important;
+        }}
+        
+        .stTextArea textarea:focus {{
+            border-color: {theme['accent']};
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }}
+        
+        .stTextArea textarea::placeholder {{
+            color: {theme['text_muted']} !important;
+        }}
+        
+        /* Button styling */
+        .stButton > button {{
+            background: linear-gradient(135deg, {theme['accent']} 0%, {theme['accent_secondary']} 100%);
+            color: white !important;
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }}
+        
+        .stButton > button:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }}
+        
+        /* Sidebar styling */
+        .css-1d391kg, [data-testid="stSidebar"] {{
+            background: {theme['bg_card']};
+        }}
+        
+        [data-testid="stSidebar"] * {{
+            color: {theme['text_primary']} !important;
+        }}
+        
+        /* Metric styling */
+        [data-testid="stMetricValue"] {{
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: {theme['text_primary']} !important;
+        }}
+        
+        [data-testid="stMetricLabel"] {{
+            color: {theme['text_secondary']} !important;
+        }}
+        
+        /* Expander styling */
+        .streamlit-expanderHeader {{
+            background: {theme['bg_surface']};
+            border-radius: 8px;
+            color: {theme['text_primary']} !important;
+        }}
+        
+        /* Radio buttons and checkboxes */
+        .stRadio label, .stCheckbox label {{
+            color: {theme['text_primary']} !important;
+        }}
+        
+        /* Selectbox */
+        .stSelectbox > div > div {{
+            background: {theme['input_bg']};
+            color: {theme['text_primary']} !important;
+        }}
+        
+        /* Warning, info, success, error boxes */
+        .stAlert {{
+            color: {theme['text_primary']} !important;
+        }}
+        
+        /* Charts - make them visible */
+        .js-plotly-plot .plotly .main-svg {{
+            background: transparent !important;
+        }}
+        
+        /* Dataframe styling */
+        .stDataFrame {{
+            background: {theme['bg_card']};
+        }}
+        
+        /* Headers */
+        h1, h2, h3, h4, h5, h6 {{
+            color: {theme['text_primary']} !important;
+        }}
+        
+        /* Theme toggle button */
+        .theme-toggle {{
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: {theme['bg_surface']};
+            border: 1px solid {theme['border']};
+            color: {theme['text_primary']} !important;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }}
+        
+        /* Interpretation text */
+        .interpretation-text {{
+            color: {theme['text_primary']} !important;
+            line-height: 1.8;
+            font-size: 1rem;
+        }}
+        
+        /* Section analysis */
+        .section-box {{
+            background: {theme['bg_surface']};
             border-radius: 8px;
             padding: 1rem;
-            margin: 0.5rem 0;
-        }
+            margin-bottom: 0.75rem;
+            border: 1px solid {theme['border']};
+        }}
         
-        /* Hide Streamlit branding */
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        
-        /* Improve text area */
-        .stTextArea textarea {
-            font-size: 14px;
-            line-height: 1.6;
-        }
+        .section-box p, .section-box span {{
+            color: {theme['text_primary']} !important;
+        }}
     </style>
     """, unsafe_allow_html=True)
     
-    # ========================================================================
-    # HEADER
-    # ========================================================================
-    
+    # Header
     st.markdown("""
     <div class="main-header">
         <h1>🧠 CognitiveLoad AI</h1>
-        <p>Intelligent Analysis of Educational Text Complexity</p>
+        <p>Understand how hard your study material is — and how to tackle it</p>
     </div>
     """, unsafe_allow_html=True)
     
-    # ========================================================================
-    # SIDEBAR
-    # ========================================================================
-    
+    # Sidebar
     with st.sidebar:
         st.markdown("### ⚙️ Settings")
         
-        # Mode selection
+        # Theme Toggle
+        theme_col1, theme_col2 = st.columns([1, 1])
+        with theme_col1:
+            if st.button("☀️ Light" if is_dark else "🌙 Dark", key="theme_toggle", use_container_width=True):
+                st.session_state.dark_mode = not st.session_state.dark_mode
+                st.rerun()
+        with theme_col2:
+            st.markdown(f"<span style='color: {theme['text_secondary']}; font-size: 0.85rem;'>{'Dark' if is_dark else 'Light'} mode</span>", unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
         mode = st.radio(
             "Analysis Mode",
-            ["Standard Analysis", "Exam Mode"],
-            help="Exam Mode provides section-by-section analysis and highlights high-risk areas"
+            ["📊 Standard", "🎓 Exam Mode"],
+            help="Exam Mode shows you which parts are hardest"
+        )
+        
+        show_simplified = st.checkbox(
+            "✨ Simplify the Text",
+            value=True,
+            help="Show an easier-to-read version of your text"
         )
         
         st.markdown("---")
         
-        # Sample text selection
-        st.markdown("### 📝 Sample Texts")
-        st.markdown("Try these examples to see how the system works:")
-        
+        st.markdown("### 📝 Try an Example")
         sample_choice = st.selectbox(
-            "Load a sample",
-            ["-- Select --"] + list(SAMPLE_TEXTS.keys())
+            "Load sample text",
+            ["-- Pick one --"] + list(SAMPLE_TEXTS.keys())
         )
         
         st.markdown("---")
         
-        # Show debug info toggle
         show_debug = st.checkbox(
-            "Show Processing Details",
+            "🔧 Show Technical Details",
             value=False,
-            help="Display intermediate values and technical details"
+            help="For curious minds who want to see how it works"
         )
         
         st.markdown("---")
         
-        # About section
-        with st.expander("ℹ️ About This App"):
+        with st.expander("ℹ️ About"):
             st.markdown("""
-            **CognitiveLoad AI** helps students understand the complexity 
-            of educational materials.
+            **CognitiveLoad AI** helps you understand how hard your study material is.
             
-            **How it works:**
-            1. Paste your study text
-            2. Our NLP engine analyzes multiple features
-            3. Get a cognitive load score and recommendations
+            **What we check:**
+            - 📏 Sentence length
+            - 📚 Hard words
+            - 💭 Abstract ideas
+            - 🔄 Repetition
+            - 📖 Overall readability
             
-            **Features analyzed:**
-            - Sentence complexity
-            - Vocabulary difficulty
-            - Abstract concept density
-            - Concept repetition
-            - Overall readability
-            
-            **Privacy:** No data is stored. All processing 
-            happens in your session.
-            
-            Made with ❤️ for students
+            **Your privacy:** We don't store anything. Everything happens in your browser.
             """)
     
-    # ========================================================================
-    # MAIN CONTENT AREA
-    # ========================================================================
-    
-    # Initialize session state
+    # Main Content
     if 'text_input' not in st.session_state:
         st.session_state.text_input = ""
     
-    # Handle sample text selection
-    if sample_choice != "-- Select --":
+    if sample_choice != "-- Pick one --":
         st.session_state.text_input = SAMPLE_TEXTS[sample_choice]
     
-    # Text input area
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.markdown("### 📄 Enter Educational Text")
+        st.markdown("### 📄 Paste Your Study Material")
         text_input = st.text_area(
-            "Paste your study material below:",
+            "Enter text to analyze:",
             value=st.session_state.text_input,
-            height=300,
-            placeholder="Paste the educational text you want to analyze here...\n\n"
-                       "For best results, include at least 50 words.",
-            key="main_text_input"
+            height=280,
+            placeholder="Paste your textbook content, lecture notes, or any study material here...\n\nTip: More text = better analysis!",
+            key="main_text_input",
+            label_visibility="collapsed"
         )
     
     with col2:
         st.markdown("### 📊 Quick Stats")
         if text_input:
             word_count = len(text_input.split())
-            char_count = len(text_input)
-            para_count = len([p for p in text_input.split('\n\n') if p.strip()])
+            sentence_count = len(sent_tokenize(text_input))
             
             st.metric("Words", f"{word_count:,}")
-            st.metric("Characters", f"{char_count:,}")
-            st.metric("Paragraphs", para_count)
+            st.metric("Sentences", f"{sentence_count:,}")
             
-            if word_count < 50:
-                st.warning("⚠️ For accurate analysis, please provide at least 50 words.")
+            if word_count < 30:
+                st.warning("⚠️ Add more text for better analysis")
+            elif word_count < 100:
+                st.info("💡 Good start! More text = better results")
+            else:
+                st.success("✅ Great amount of text!")
         else:
-            st.info("👆 Enter text to see statistics")
+            st.info("👆 Paste text to see stats")
     
-    # Analyze button
+    # Analyze Button
     analyze_clicked = st.button(
-        "🔍 Analyze Cognitive Load",
+        "🔍 Analyze My Text",
         type="primary",
         use_container_width=True
     )
     
-    # ========================================================================
-    # ANALYSIS AND RESULTS
-    # ========================================================================
-    
+    # Analysis Results
     if analyze_clicked and text_input:
         if len(text_input.split()) < 10:
-            st.error("⚠️ Please enter more text for meaningful analysis (at least 10 words).")
+            st.error("⚠️ Please add more text (at least 10 words)")
         else:
-            # Show loading spinner
-            with st.spinner("Analyzing text... This may take a moment."):
-                
+            with st.spinner("🔍 Analyzing your text..."):
                 # Initialize components
                 preprocessor = TextPreprocessor()
                 extractor = CognitiveFeatureExtractor()
                 calculator = CognitiveLoadCalculator()
                 chunker = AdaptiveChunker()
+                simplifier = TextSimplifier()
                 
-                # Perform preprocessing
+                # Process
                 preprocessed = preprocessor.full_preprocess(text_input)
-                
-                # Extract features
                 features = extractor.extract_all_features(preprocessed, text_input)
-                
-                # Calculate score
                 score = calculator.calculate_score(features)
                 classification = calculator.classify_load(score)
-                interpretation = calculator.get_interpretation(score, classification)
+                interpretation = calculator.get_simple_interpretation(score, classification, features)
+                study_plan = chunker.calculate_study_plan(preprocessed['word_count'], classification)
                 
-                # Get study plan
-                study_plan = chunker.calculate_study_plan(
-                    preprocessed['word_count'], 
-                    classification
-                )
-            
-            # ================================================================
-            # RESULTS DASHBOARD
-            # ================================================================
+                # Simplify text if enabled
+                if show_simplified:
+                    simplified_result = simplifier.simplify_text(text_input)
             
             st.markdown("---")
-            st.markdown("## 📊 Analysis Results")
             
-            # Main metrics row
-            col1, col2, col3 = st.columns(3)
+            # Results Section
+            st.markdown("## 📊 Your Results")
+            
+            col1, col2, col3 = st.columns([1.2, 1, 1])
             
             with col1:
-                # Gauge chart
                 gauge_fig = create_gauge_chart(score, classification)
                 st.plotly_chart(gauge_fig, use_container_width=True)
             
             with col2:
-                st.markdown("### Load Classification")
-                status_class = f"status-{classification.lower()}"
+                st.markdown("### How Hard Is It?")
+                badge_class = classification.lower()
                 st.markdown(f"""
-                <div style="text-align: center; padding: 2rem;">
-                    <span class="{status_class}" style="font-size: 1.5rem;">
-                        {classification} Cognitive Load
-                    </span>
-                    <p style="margin-top: 1rem; color: #666;">
-                        Score: {score}/100
+                <div style="text-align: center; padding: 1rem;">
+                    <div class="score-badge {badge_class}">
+                        {interpretation['emoji']} {interpretation['title']}
+                    </div>
+                    <p style="margin-top: 1rem; color: #64748b; font-size: 0.95rem;">
+                        {interpretation['summary']}
                     </p>
                 </div>
                 """, unsafe_allow_html=True)
-                
-                # Quick interpretation
-                if classification == "Low":
-                    st.success("✅ This text is relatively easy to process!")
-                elif classification == "Medium":
-                    st.warning("⚡ Moderate complexity - active reading recommended")
-                else:
-                    st.error("🔥 High complexity - break into smaller sessions")
             
             with col3:
-                st.markdown("### Study Recommendation")
-                st.metric(
-                    "Suggested Session Length",
-                    study_plan['recommended_session_length']
-                )
-                st.metric(
-                    "Number of Sessions",
-                    study_plan['number_of_sessions']
-                )
-                st.metric(
-                    "Break Duration",
-                    study_plan['break_duration']
-                )
+                st.markdown("### What This Means")
+                st.markdown(f"""
+                <div style="padding: 0.5rem;">
+                    <p style="color: #475569; line-height: 1.7;">
+                        {interpretation['meaning']}
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
             
             st.markdown("---")
             
-            # Feature breakdown
-            st.markdown("### 📈 Feature Analysis")
+            # Study Tips
+            st.markdown("## 💡 Study Tips For You")
+            
+            tip_cols = st.columns(len(interpretation['tips']))
+            for i, tip in enumerate(interpretation['tips']):
+                with tip_cols[i]:
+                    st.markdown(f"""
+                    <div class="tip-card">
+                        <span style="font-size: 1rem;">{tip}</span>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # Adaptive Study Plan (Improved)
+            st.markdown("## 📚 Your Study Plan")
             
             col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("### ⏱️ Time You'll Need")
+                
+                st.markdown(f"""
+                <div class="study-plan-item">
+                    <div class="value">{chunker.format_time(study_plan['reading_time_mins'])}</div>
+                    <div class="label">Just reading through it</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                <div class="study-plan-item" style="border-left-color: #8b5cf6;">
+                    <div class="value">{chunker.format_time(study_plan['study_time_mins'])}</div>
+                    <div class="label">To actually learn it (with thinking time)</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                st.markdown(f"""
+                <div class="study-plan-item" style="border-left-color: #10b981;">
+                    <div class="value">{chunker.format_time(study_plan['total_time_mins'])}</div>
+                    <div class="label">Total with breaks included</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown("### 📋 How to Break It Up")
+                
+                st.markdown(f"""
+                <div class="result-card">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; text-align: center;">
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #3b82f6;">
+                                {study_plan['num_sessions']}
+                            </div>
+                            <div style="color: #64748b; font-size: 0.9rem;">study sessions</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #8b5cf6;">
+                                {study_plan['session_length_min']}-{study_plan['session_length_max']}
+                            </div>
+                            <div style="color: #64748b; font-size: 0.9rem;">minutes each</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #10b981;">
+                                ~{study_plan['words_per_session']}
+                            </div>
+                            <div style="color: #64748b; font-size: 0.9rem;">words per session</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">
+                                {study_plan['break_mins']}
+                            </div>
+                            <div style="color: #64748b; font-size: 0.9rem;">min breaks</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Simple explanation
+                if classification == "Low":
+                    st.info("😊 This is easy stuff! You can study for longer periods without getting tired.")
+                elif classification == "Medium":
+                    st.warning("📝 Medium difficulty - use the Pomodoro technique (25 min work, 5 min break)")
+                else:
+                    st.error("🧠 This is tough! Short sessions with good breaks will help you absorb it better.")
+            
+            st.markdown("---")
+            
+            # Feature Breakdown
+            st.markdown("## 📈 What Makes It Hard (or Easy)")
+            
+            col1, col2 = st.columns([1.5, 1])
             
             with col1:
                 bar_fig = create_feature_bar_chart(features)
                 st.plotly_chart(bar_fig, use_container_width=True)
             
             with col2:
-                radar_fig = create_feature_radar_chart(features)
-                st.plotly_chart(radar_fig, use_container_width=True)
-            
-            # Detailed interpretation
-            st.markdown("### 💡 Detailed Interpretation")
-            st.markdown(interpretation)
-            
-            # Feature explanations
-            with st.expander("🔍 Understanding Each Feature"):
+                st.markdown("### Feature Explanations")
                 for feature_name, feature_data in features.items():
-                    display_name = feature_name.replace('_', ' ').title()
-                    
-                    col1, col2, col3 = st.columns([2, 1, 1])
-                    with col1:
-                        st.markdown(f"**{display_name}**")
-                        st.caption(feature_data['description'])
-                    with col2:
-                        st.metric("Raw Value", f"{feature_data['raw']} {feature_data['unit']}")
-                    with col3:
-                        # Color-coded score
-                        color = COLORS['low'] if feature_data['normalized'] < 35 else \
-                                COLORS['medium'] if feature_data['normalized'] < 65 else \
-                                COLORS['high']
+                    with st.expander(f"{feature_data['simple_explanation'][:2]} {feature_name.replace('_', ' ').title()}"):
+                        st.markdown(f"**Score:** {feature_data['normalized']:.0f}/100")
+                        st.markdown(f"**What it means:** {feature_data['description']}")
                         st.markdown(f"""
-                        <div style="background-color: {color}; 
-                                    padding: 0.5rem; 
-                                    border-radius: 5px; 
-                                    text-align: center;
-                                    color: white;">
-                            <strong>{feature_data['normalized']}/100</strong>
+                        <div class="feature-explanation">
+                            {feature_data['simple_explanation']}
                         </div>
                         """, unsafe_allow_html=True)
-                    
-                    st.markdown("---")
             
-            # ================================================================
-            # EXAM MODE
-            # ================================================================
-            
-            if mode == "Exam Mode":
+            # Simplified Text Section
+            if show_simplified:
                 st.markdown("---")
-                st.markdown("## 🎓 Exam Mode Analysis")
+                st.markdown("## ✨ Simplified Version")
+                
+                if simplified_result['changes']:
+                    st.markdown(f"""
+                    <div class="simplified-box">
+                        <h4>📖 Here's an easier way to read this:</h4>
+                        <p>{simplified_result['simplified']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    if simplified_result['word_changes_count'] > 0:
+                        st.markdown("**Words we simplified:**")
+                        changes_html = ""
+                        for change in simplified_result['changes'][:10]:
+                            if 'complex word' in change.get('reason', ''):
+                                changes_html += f"""
+                                <span class="word-change">
+                                    <span class="old">{change['original']}</span>
+                                    <span class="arrow">→</span>
+                                    <span class="new">{change['simplified']}</span>
+                                </span>
+                                """
+                        st.markdown(changes_html, unsafe_allow_html=True)
+                else:
+                    st.success("✅ This text is already pretty simple! No major changes needed.")
+            
+            # Exam Mode
+            if "Exam" in mode:
+                st.markdown("---")
+                st.markdown("## 🎓 Exam Mode: Section Analysis")
                 
                 exam_analyzer = ExamModeAnalyzer()
                 sections = exam_analyzer.analyze_sections(text_input)
                 
                 if sections:
-                    # Section heatmap
-                    heatmap_fig = create_section_heatmap(sections)
-                    if heatmap_fig:
-                        st.plotly_chart(heatmap_fig, use_container_width=True)
+                    section_fig = create_section_chart(sections)
+                    if section_fig:
+                        st.plotly_chart(section_fig, use_container_width=True)
                     
-                    # High-risk sections
-                    high_risk = exam_analyzer.get_high_risk_sections(sections)
+                    recommendations = exam_analyzer.generate_simple_recommendations(sections)
                     
-                    if high_risk:
-                        st.markdown("### ⚠️ High-Risk Sections")
-                        st.warning(f"Found {len(high_risk)} section(s) with elevated cognitive load")
-                        
-                        for section in high_risk:
-                            with st.expander(f"Section {section['index']} - Score: {section['score']}/100"):
-                                st.markdown(f"**Preview:** {section['text']}")
-                                st.markdown(f"**Word Count:** {section['word_count']}")
-                                st.info("💡 Tip: Read this section slowly and take notes. "
-                                       "Consider re-reading after completing the full text.")
-                    else:
-                        st.success("✅ No high-risk sections identified. "
-                                  "Complexity is fairly uniform throughout.")
-                    
-                    # Exam recommendations
-                    st.markdown("### 📋 Study Recommendations")
-                    recommendations = exam_analyzer.generate_exam_recommendations(sections)
+                    st.markdown("### 📋 What to Focus On")
                     for rec in recommendations:
-                        st.markdown(f"- {rec}")
+                        st.markdown(f"""
+                        <div class="tip-card">
+                            <span class="icon">{rec['icon']}</span>
+                            <strong>{rec['title']}</strong><br>
+                            <span style="color: #64748b;">{rec['text']}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # Show section details
+                    with st.expander("📑 See All Sections"):
+                        for section in sections:
+                            risk_class = "high" if section['is_high_risk'] else "ok"
+                            risk_text = "⚠️ Needs attention" if section['is_high_risk'] else "✅ Manageable"
+                            st.markdown(f"""
+                            <div class="result-card">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <strong>Part {section['index']}</strong>
+                                    <span class="section-risk {risk_class}">{risk_text}</span>
+                                </div>
+                                <p style="color: #64748b; font-size: 0.9rem; margin-top: 0.5rem;">
+                                    {section['text']}
+                                </p>
+                                <div style="margin-top: 0.5rem; color: #94a3b8; font-size: 0.8rem;">
+                                    {section['word_count']} words • Difficulty: {section['score']}/100
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
                 else:
-                    st.info("Text is too short for section analysis. "
-                           "Try adding more content with paragraph breaks.")
+                    st.info("📝 Add paragraph breaks (blank lines) in your text for section analysis.")
             
-            # ================================================================
-            # ADAPTIVE CHUNKING
-            # ================================================================
-            
-            st.markdown("---")
-            st.markdown("## 📚 Adaptive Study Plan")
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("### ⏱️ Time Estimates")
-                
-                st.markdown(f"""
-                <div class="info-box">
-                    <h4>📖 Reading Time</h4>
-                    <p><strong>{study_plan['estimated_reading_time']} minutes</strong> 
-                       (at ~200 words/min)</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div class="info-box">
-                    <h4>📝 Study Time</h4>
-                    <p><strong>{study_plan['estimated_study_time']} minutes</strong> 
-                       (including processing time)</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div class="info-box">
-                    <h4>☕ Total with Breaks</h4>
-                    <p><strong>{study_plan['total_with_breaks']} minutes</strong></p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown("### 🎯 Chunking Strategy")
-                
-                num_sessions = study_plan['number_of_sessions']
-                words_per_session = study_plan['words_per_session']
-                
-                st.markdown(f"""
-                Based on the **{classification}** cognitive load, we recommend:
-                
-                - **{num_sessions} study session(s)**
-                - **~{words_per_session} words per session**
-                - **{study_plan['break_duration']} breaks** between sessions
-                
-                **Why this works:**
-                """)
-                
-                if classification == "Low":
-                    st.markdown("""
-                    - Text is accessible, allowing longer focus periods
-                    - Less mental fatigue expected
-                    - Efficient for quick comprehension
-                    """)
-                elif classification == "Medium":
-                    st.markdown("""
-                    - Balanced complexity requires moderate breaks
-                    - Pomodoro technique (25 min) is ideal
-                    - Active note-taking recommended
-                    """)
-                else:
-                    st.markdown("""
-                    - High complexity demands shorter bursts
-                    - Prevents cognitive overload
-                    - More frequent review needed
-                    - Consider supplementary resources
-                    """)
-            
-            # ================================================================
-            # DEBUG / PROCESSING DETAILS
-            # ================================================================
-            
+            # Debug Section
             if show_debug:
                 st.markdown("---")
-                st.markdown("## 🔧 Processing Details")
+                st.markdown("## 🔧 Technical Details")
                 
-                with st.expander("📊 Preprocessing Statistics"):
+                with st.expander("📊 Processing Stats"):
                     col1, col2 = st.columns(2)
                     with col1:
                         st.metric("Total Sentences", preprocessed['sentence_count'])
                         st.metric("Total Words", preprocessed['word_count'])
                         st.metric("Unique Words", preprocessed['unique_words'])
                     with col2:
-                        st.metric("Tokens (no stopwords)", 
-                                 len(preprocessed['tokens_no_stopwords']))
+                        st.metric("Content Words", len(preprocessed['tokens_no_stopwords']))
                         st.metric("Lemmas", len(preprocessed['lemmas']))
-                        vocab_richness = (preprocessed['unique_words'] / 
-                                         preprocessed['word_count'] * 100) \
-                                         if preprocessed['word_count'] > 0 else 0
+                        vocab_richness = (preprocessed['unique_words'] / preprocessed['word_count'] * 100) if preprocessed['word_count'] > 0 else 0
                         st.metric("Vocabulary Richness", f"{vocab_richness:.1f}%")
-                
-                with st.expander("📝 Sample Processed Tokens"):
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.markdown("**First 20 Tokens:**")
-                        st.code(preprocessed['tokens'][:20])
-                    with col2:
-                        st.markdown("**First 20 Lemmas:**")
-                        st.code(preprocessed['lemmas'][:20])
-                
-                with st.expander("🏷️ POS Tags Sample"):
-                    st.write(preprocessed['pos_tags'][:30])
                 
                 with st.expander("📐 Raw Feature Values"):
                     feature_df = pd.DataFrame([
                         {
                             'Feature': name.replace('_', ' ').title(),
                             'Raw Value': f"{data['raw']} {data['unit']}",
-                            'Normalized': data['normalized'],
-                            'Weight': FEATURE_WEIGHTS.get(name, 0)
+                            'Score (0-100)': data['normalized'],
+                            'Weight': f"{FEATURE_WEIGHTS.get(name, 0)*100:.0f}%"
                         }
                         for name, data in features.items()
                     ])
                     st.dataframe(feature_df, use_container_width=True)
-                
-                with st.expander("⚖️ Score Calculation"):
-                    st.markdown("**Formula:** `score = Σ (feature_normalized × weight)`")
-                    st.markdown("**Weights used:**")
-                    for feature, weight in FEATURE_WEIGHTS.items():
-                        direction = "reduces" if weight < 0 else "increases"
-                        st.markdown(f"- **{feature.replace('_', ' ').title()}:** "
-                                   f"{abs(weight)*100:.0f}% weight ({direction} load)")
-                    st.markdown(f"**Final Score:** {score}/100")
     
     elif analyze_clicked and not text_input:
-        st.warning("⚠️ Please enter some text to analyze.")
+        st.warning("👆 Please paste some text first!")
     
-    # ========================================================================
-    # FOOTER
-    # ========================================================================
-    
+    # Footer
     st.markdown("---")
     st.markdown("""
-    <div style="text-align: center; color: #666; padding: 1rem;">
-        <p><strong>CognitiveLoad AI</strong> | Built for Students, by AI</p>
+    <div style="text-align: center; color: #94a3b8; padding: 1rem;">
+        <p><strong>CognitiveLoad AI</strong> • Helping students learn smarter</p>
         <p style="font-size: 0.8rem;">
-            🔒 Privacy First: No data is stored or transmitted. All processing happens locally.
-            <br>
-            📚 Educational Purpose: This tool helps understand text complexity, not circumvent learning.
+            🔒 Your privacy matters: We don't store or share any of your text
         </p>
     </div>
     """, unsafe_allow_html=True)
-
-# ============================================================================
-# ENTRY POINT
-# ============================================================================
 
 if __name__ == "__main__":
     main()
