@@ -4,212 +4,205 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CognitiveLoad AI - Smart Study Assistant</title>
+    <meta name="description" content="AI-powered tool to analyze cognitive load of study materials. Get difficulty scores, study plans, and text simplification.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* ==================== CSS VARIABLES ==================== */
         :root {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #f1f5f9;
-            --bg-card: #ffffff;
-            --bg-surface: #f8fafc;
-            --bg-nav: rgba(255, 255, 255, 0.95);
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --accent: #3b82f6;
-            --accent-secondary: #8b5cf6;
-            --accent-glow: rgba(59, 130, 246, 0.3);
+            --bg-primary: #f8fafc; --bg-secondary: #f1f5f9; --bg-card: #ffffff;
+            --bg-surface: #f8fafc; --bg-nav: rgba(255,255,255,0.95);
+            --text-primary: #1e293b; --text-secondary: #475569; --text-muted: #64748b;
+            --border: #e2e8f0; --accent: #3b82f6; --accent-secondary: #8b5cf6;
+            --accent-glow: rgba(59,130,246,0.3);
             --low-bg: #dcfce7; --low-text: #166534; --low-bar: #22c55e;
             --medium-bg: #fef3c7; --medium-text: #92400e; --medium-bar: #f59e0b;
             --high-bg: #fee2e2; --high-text: #991b1b; --high-bar: #ef4444;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1); --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --toast-success: #22c55e; --toast-error: #ef4444; --toast-warning: #f59e0b; --toast-info: #3b82f6;
         }
         [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-card: #1e293b;
-            --bg-surface: #334155;
-            --bg-nav: rgba(15, 23, 42, 0.95);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --border: #334155;
-            --accent-glow: rgba(59, 130, 246, 0.4);
+            --bg-primary: #0f172a; --bg-secondary: #1e293b; --bg-card: #1e293b;
+            --bg-surface: #334155; --bg-nav: rgba(15,23,42,0.95);
+            --text-primary: #f1f5f9; --text-secondary: #94a3b8; --text-muted: #64748b;
+            --border: #334155; --accent-glow: rgba(59,130,246,0.4);
             --low-bg: #064e3b; --low-text: #6ee7b7;
             --medium-bg: #78350f; --medium-text: #fcd34d;
             --high-bg: #7f1d1d; --high-text: #fca5a5;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
-            min-height: 100vh;
-            color: var(--text-primary);
-            transition: all 0.3s ease;
-        }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary)); min-height: 100vh; color: var(--text-primary); transition: all 0.3s ease; }
+
+        /* ==================== ANIMATIONS ==================== */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes barGrow { from { width: 0; } }
-        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @keyframes toastIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+        @keyframes progressPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+        @keyframes countUp { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-pulse { animation: pulse 2s ease-in-out infinite; }
 
-        /* Navigation */
-        .navbar {
-            position: fixed; top: 0; left: 0; right: 0;
-            background: var(--bg-nav);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            z-index: 1000; padding: 0.75rem 2rem;
+        /* ==================== TOAST NOTIFICATIONS ==================== */
+        .toast-container { position: fixed; top: 90px; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.75rem; pointer-events: none; }
+        .toast {
+            pointer-events: auto; display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.5rem;
+            border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15); min-width: 320px; max-width: 450px;
+            animation: toastIn 0.4s ease-out; transition: all 0.3s;
         }
+        .toast.removing { animation: toastOut 0.3s ease-in forwards; }
+        .toast-icon { font-size: 1.5rem; flex-shrink: 0; }
+        .toast-body { flex: 1; }
+        .toast-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.15rem; }
+        .toast-message { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4; }
+        .toast-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text-muted); padding: 0.25rem; border-radius: 50%; transition: all 0.2s; flex-shrink: 0; }
+        .toast-close:hover { background: var(--bg-surface); color: var(--text-primary); }
+        .toast-bar { position: absolute; bottom: 0; left: 0; height: 3px; border-radius: 0 0 16px 16px; transition: width linear; }
+        .toast.success .toast-bar { background: var(--toast-success); }
+        .toast.error .toast-bar { background: var(--toast-error); }
+        .toast.warning .toast-bar { background: var(--toast-warning); }
+        .toast.info .toast-bar { background: var(--toast-info); }
+
+        /* ==================== PROGRESS BAR ==================== */
+        .progress-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; }
+        .progress-overlay.active { display: flex; animation: fadeIn 0.2s ease-out; }
+        .progress-card { background: var(--bg-card); border-radius: 24px; padding: 2.5rem 3rem; width: 420px; max-width: 90vw; text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.2); }
+        .progress-icon { font-size: 3rem; margin-bottom: 1rem; animation: float 2s ease-in-out infinite; }
+        .progress-title { font-family: 'Poppins', sans-serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .progress-subtitle { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; }
+        .progress-bar-track { width: 100%; height: 8px; background: var(--bg-surface); border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); border-radius: 4px; transition: width 0.3s ease; }
+        .progress-steps { display: flex; justify-content: center; gap: 1.5rem; }
+        .progress-step { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--text-muted); transition: all 0.3s; }
+        .progress-step.active { color: var(--accent); font-weight: 600; }
+        .progress-step.done { color: var(--low-text); }
+        .progress-step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+        .progress-step.active .progress-step-dot { background: var(--accent); animation: pulse 1s infinite; }
+        .progress-step.done .progress-step-dot { background: var(--low-bar); }
+
+        /* ==================== NAVIGATION ==================== */
+        .navbar { position: fixed; top: 0; left: 0; right: 0; background: var(--bg-nav); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); z-index: 1000; padding: 0.75rem 2rem; }
         .navbar.scrolled { box-shadow: var(--shadow-lg); }
         .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        .nav-logo {
-            display: flex; align-items: center; gap: 0.75rem; text-decoration: none;
-            font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.5rem;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        .nav-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.5rem; background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; }
         .nav-logo-icon { font-size: 1.75rem; animation: float 3s ease-in-out infinite; }
         .nav-links { display: flex; gap: 0.5rem; }
-        .nav-link {
-            padding: 0.6rem 1.25rem; border-radius: 50px; text-decoration: none;
-            color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; transition: all 0.2s;
-        }
+        .nav-link { padding: 0.6rem 1.25rem; border-radius: 50px; text-decoration: none; color: var(--text-secondary); font-weight: 500; font-size: 0.95rem; transition: all 0.2s; cursor: pointer; }
         .nav-link:hover { color: var(--accent); background: var(--bg-surface); }
         .nav-link.active { color: white; background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); }
-        .nav-actions { display: flex; align-items: center; gap: 1rem; }
-        .theme-toggle {
-            background: var(--bg-surface); border: 1px solid var(--border); border-radius: 50%;
-            width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center;
-            justify-content: center; font-size: 1.25rem; transition: all 0.3s;
-        }
+        .nav-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .theme-toggle { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; transition: all 0.3s; }
         .theme-toggle:hover { transform: rotate(20deg) scale(1.1); }
+        .kbd-hint { display: none; font-size: 0.7rem; color: var(--text-muted); background: var(--bg-surface); padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid var(--border); }
         .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); }
 
-        /* Pages */
+        /* ==================== PAGES ==================== */
         .page { display: none; padding-top: 80px; min-height: 100vh; }
         .page.active { display: block; animation: fadeIn 0.5s ease-out; }
         .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 
-        /* Hero */
+        /* ==================== HERO ==================== */
         .hero { text-align: center; padding: 4rem 2rem 6rem; position: relative; overflow: hidden; }
-        .hero::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle at 30% 50%, var(--accent-glow), transparent 50%),
-                        radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.2), transparent 50%);
-            animation: gradient 15s ease infinite; z-index: -1;
-        }
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 50px;
-            font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;
-        }
+        .hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 30% 50%, var(--accent-glow), transparent 50%), radial-gradient(circle at 70% 80%, rgba(139,92,246,0.2), transparent 50%); animation: gradient 15s ease infinite; z-index: -1; }
+        .hero-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 50px; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem; }
         .hero-badge-dot { width: 8px; height: 8px; background: var(--low-bar); border-radius: 50%; animation: pulse 2s infinite; }
         .hero h1 { font-family: 'Poppins', sans-serif; font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }
-        .hero h1 .gradient-text {
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary), #ec4899);
-            background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            animation: gradient 5s ease infinite;
-        }
+        .hero h1 .gradient-text { background: linear-gradient(135deg, var(--accent), var(--accent-secondary), #ec4899); background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: gradient 5s ease infinite; }
         .hero-subtitle { font-size: 1.35rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2.5rem; line-height: 1.7; }
         .hero-buttons { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
-        .btn {
-            display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem;
-            border-radius: 16px; font-size: 1rem; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.3s; border: none;
-        }
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 1rem 2rem; border-radius: 16px; font-size: 1rem; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.3s; border: none; }
         .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); color: white; box-shadow: 0 4px 15px var(--accent-glow); }
         .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 25px var(--accent-glow); }
         .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 2px solid var(--border); }
         .btn-secondary:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-3px); }
+        .btn-sm { padding: 0.6rem 1.25rem; font-size: 0.85rem; border-radius: 12px; }
+        .btn-outline { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+        .btn-outline:hover { background: var(--accent); color: white; }
 
-        /* Features */
+        /* ==================== FEATURES SECTION ==================== */
         .features-section { padding: 4rem 2rem; }
         .section-header { text-align: center; margin-bottom: 3rem; }
         .section-header h2 { font-family: 'Poppins', sans-serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
         .section-header p { color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
         .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto; }
-        .feature-card {
-            background: var(--bg-card); border-radius: 24px; padding: 2rem; border: 1px solid var(--border);
-            transition: all 0.3s; position: relative; overflow: hidden;
-        }
-        .feature-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); transform: scaleX(0); transition: transform 0.3s;
-        }
+        .feature-card { background: var(--bg-card); border-radius: 24px; padding: 2rem; border: 1px solid var(--border); transition: all 0.3s; position: relative; overflow: hidden; }
+        .feature-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--accent), var(--accent-secondary)); transform: scaleX(0); transition: transform 0.3s; }
         .feature-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
         .feature-card:hover::before { transform: scaleX(1); }
-        .feature-icon {
-            width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.75rem; margin-bottom: 1.25rem; background: linear-gradient(135deg, var(--accent-glow), transparent);
-        }
+        .feature-icon { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin-bottom: 1.25rem; background: linear-gradient(135deg, var(--accent-glow), transparent); }
         .feature-card h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; }
         .feature-card p { color: var(--text-secondary); line-height: 1.6; }
 
-        /* Stats */
+        /* ==================== STATS ==================== */
         .stats-section { padding: 4rem 2rem; background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; max-width: 1000px; margin: 0 auto; text-align: center; }
-        .stat-number {
-            font-family: 'Poppins', sans-serif; font-size: 3rem; font-weight: 800;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        .stat-number { font-family: 'Poppins', sans-serif; font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .stat-label { color: var(--text-secondary); font-size: 1rem; margin-top: 0.5rem; }
 
-        /* Page Header */
+        /* ==================== PAGE HEADER ==================== */
         .page-header { text-align: center; margin-bottom: 2rem; padding: 2rem 0; }
         .page-header h1 { font-family: 'Poppins', sans-serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 0.75rem; }
         .page-header p { color: var(--text-secondary); font-size: 1.1rem; }
 
-        /* Input Card */
+        /* ==================== INPUT CARD ==================== */
         .input-card { background: var(--bg-card); border-radius: 24px; padding: 2rem; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 2rem; }
         .input-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem; }
         .input-header h3 { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
         .sample-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .sample-btn {
-            padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 50px;
-            background: var(--bg-surface); color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s;
-        }
+        .sample-btn { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 50px; background: var(--bg-surface); color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
         .sample-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
         .textarea-container { position: relative; }
-        textarea {
-            width: 100%; min-height: 200px; padding: 1.25rem; border: 2px solid var(--border); border-radius: 16px;
-            font-size: 1rem; font-family: inherit; line-height: 1.7; resize: vertical;
-            background: var(--bg-surface); color: var(--text-primary); transition: all 0.3s;
-        }
+        textarea { width: 100%; min-height: 200px; padding: 1.25rem; border: 2px solid var(--border); border-radius: 16px; font-size: 1rem; font-family: inherit; line-height: 1.7; resize: vertical; background: var(--bg-surface); color: var(--text-primary); transition: all 0.3s; }
         textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
         textarea::placeholder { color: var(--text-muted); }
-        .word-count { position: absolute; bottom: 1rem; right: 1rem; font-size: 0.85rem; color: var(--text-muted); background: var(--bg-card); padding: 0.25rem 0.75rem; border-radius: 50px; }
-        .analyze-btn {
-            width: 100%; padding: 1.25rem 2rem; margin-top: 1rem;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); color: white; border: none;
-            border-radius: 16px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;
-            display: flex; align-items: center; justify-content: center; gap: 0.75rem;
-        }
+        textarea.invalid { border-color: var(--high-bar); box-shadow: 0 0 0 4px rgba(239,68,68,0.2); animation: shake 0.4s ease; }
+        .textarea-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; padding: 0 0.25rem; }
+        .word-count { font-size: 0.85rem; color: var(--text-muted); }
+        .word-count.warning { color: var(--medium-text); font-weight: 600; }
+        .word-count.good { color: var(--low-text); }
+        .input-hint { font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem; }
+        .input-hint kbd { background: var(--bg-surface); border: 1px solid var(--border); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.75rem; font-family: inherit; }
+
+        /* ==================== FILE DROP ZONE ==================== */
+        .file-drop-zone { border: 2px dashed var(--border); border-radius: 16px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 1rem; }
+        .file-drop-zone:hover, .file-drop-zone.dragover { border-color: var(--accent); background: var(--accent-glow); }
+        .file-drop-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .file-drop-text { color: var(--text-secondary); font-size: 0.9rem; }
+        .file-drop-text strong { color: var(--accent); }
+
+        /* ==================== ACTION BUTTONS ==================== */
+        .analyze-btn { width: 100%; padding: 1.25rem 2rem; margin-top: 1rem; background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); color: white; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
         .analyze-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 30px var(--accent-glow); }
         .analyze-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         .spinner { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
 
-        /* Results */
+        /* ==================== RESULTS ==================== */
         .results-section { display: none; }
         .results-section.visible { display: block; animation: fadeIn 0.5s ease-out; }
-        .score-card {
-            background: var(--bg-card); border-radius: 24px; padding: 3rem; text-align: center;
-            border: 1px solid var(--border); box-shadow: var(--shadow-lg); margin-bottom: 2rem; position: relative; overflow: hidden;
-        }
+
+        /* Export Bar */
+        .export-bar { display: flex; justify-content: flex-end; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .export-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-card); color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .export-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
+
+        /* Score Card */
+        .score-card { background: var(--bg-card); border-radius: 24px; padding: 3rem; text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-lg); margin-bottom: 2rem; position: relative; overflow: hidden; }
         .score-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--low-bar), var(--medium-bar), var(--high-bar)); }
-        .score-number { font-family: 'Poppins', sans-serif; font-size: 6rem; font-weight: 800; line-height: 1; }
-        .score-number.low { color: var(--low-text); }
-        .score-number.medium { color: var(--medium-text); }
-        .score-number.high { color: var(--high-text); }
+        .score-number { font-family: 'Poppins', sans-serif; font-size: 6rem; font-weight: 800; line-height: 1; animation: countUp 0.6s ease-out; }
+        .score-number.low { color: var(--low-text); } .score-number.medium { color: var(--medium-text); } .score-number.high { color: var(--high-text); }
         .score-label { font-size: 1.1rem; color: var(--text-secondary); margin-top: 0.5rem; }
         .classification-badge { display: inline-flex; align-items: center; gap: 0.75rem; padding: 1rem 2rem; border-radius: 50px; font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0; }
         .classification-badge.low { background: var(--low-bg); color: var(--low-text); }
@@ -218,13 +211,25 @@
         .interpretation-box { background: var(--bg-surface); border-radius: 16px; padding: 1.5rem; text-align: left; }
         .interpretation-box h4 { font-size: 1.1rem; margin-bottom: 0.75rem; }
         .interpretation-box p { color: var(--text-secondary); line-height: 1.7; }
+
+        /* Results Grid */
         .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .result-card { background: var(--bg-card); border-radius: 20px; padding: 1.75rem; border: 1px solid var(--border); box-shadow: var(--shadow); }
-        .result-card h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        /* Collapsible Result Card */
+        .result-card { background: var(--bg-card); border-radius: 20px; padding: 0; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; }
+        .result-card-header { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.75rem; cursor: pointer; transition: background 0.2s; user-select: none; }
+        .result-card-header:hover { background: var(--bg-surface); }
+        .result-card-header h3 { font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
+        .collapse-icon { font-size: 1.25rem; transition: transform 0.3s; color: var(--text-muted); }
+        .result-card.collapsed .collapse-icon { transform: rotate(-90deg); }
+        .result-card-body { padding: 0 1.75rem 1.75rem; transition: all 0.3s ease; }
+        .result-card.collapsed .result-card-body { display: none; }
+
+        /* Feature Chart */
         .feature-chart { display: flex; flex-direction: column; gap: 1.25rem; }
         .feature-item { opacity: 0; animation: slideInLeft 0.5s ease-out forwards; }
         .feature-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .feature-name { font-weight: 600; font-size: 0.95rem; }
+        .feature-name { font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem; }
         .feature-value { font-weight: 700; font-size: 1rem; padding: 0.25rem 0.75rem; border-radius: 50px; }
         .feature-value.low { background: var(--low-bg); color: var(--low-text); }
         .feature-value.medium { background: var(--medium-bg); color: var(--medium-text); }
@@ -235,6 +240,13 @@
         .feature-bar.medium { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
         .feature-bar.high { background: linear-gradient(90deg, #ef4444, #f87171); }
         .feature-explanation { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem; padding-left: 0.75rem; border-left: 2px solid var(--border); }
+
+        /* Tooltip */
+        .tooltip-trigger { position: relative; cursor: help; color: var(--text-muted); font-size: 0.85rem; }
+        .tooltip-trigger::after { content: attr(data-tooltip); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background: var(--text-primary); color: var(--bg-card); padding: 0.5rem 0.85rem; border-radius: 8px; font-size: 0.8rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: all 0.2s; font-weight: 400; z-index: 100; }
+        .tooltip-trigger:hover::after { opacity: 1; bottom: 130%; }
+
+        /* Study Plan */
         .study-plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
         .plan-item { background: var(--bg-surface); padding: 1.25rem; border-radius: 16px; text-align: center; transition: all 0.2s; }
         .plan-item:hover { transform: scale(1.03); }
@@ -246,38 +258,64 @@
         .tip-item:hover { background: var(--accent); color: white; transform: translateX(8px); }
         .tip-icon { font-size: 1.25rem; flex-shrink: 0; }
 
-        /* Simplify */
+        /* Section Analysis */
+        .sections-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .section-item { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; background: var(--bg-surface); border-radius: 12px; transition: all 0.2s; }
+        .section-item:hover { transform: translateX(4px); }
+        .section-index { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.1rem; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 10px; flex-shrink: 0; }
+        .section-index.low { background: var(--low-bg); color: var(--low-text); }
+        .section-index.medium { background: var(--medium-bg); color: var(--medium-text); }
+        .section-index.high { background: var(--high-bg); color: var(--high-text); }
+        .section-details { flex: 1; min-width: 0; }
+        .section-preview { font-size: 0.9rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .section-meta { display: flex; gap: 1rem; margin-top: 0.35rem; font-size: 0.8rem; color: var(--text-muted); }
+        .section-score-bar { width: 80px; height: 8px; background: var(--bg-card); border-radius: 4px; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; }
+        .section-score-bar-fill { height: 100%; border-radius: 4px; }
+
+        /* ==================== SIMPLIFY ==================== */
         .simplify-output { display: none; }
         .simplify-output.visible { display: block; animation: fadeIn 0.5s ease-out; }
-        .simplified-card { background: linear-gradient(135deg, var(--low-bg), var(--bg-surface)); border-radius: 20px; padding: 2rem; border: 2px solid var(--low-text); margin-bottom: 1.5rem; }
-        .simplified-card h3 { color: var(--low-text); font-size: 1.2rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-        .simplified-text { font-size: 1.1rem; line-height: 1.9; color: var(--text-primary); }
-        .word-changes-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .simplify-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .comparison-card { border-radius: 20px; padding: 2rem; border-width: 2px; border-style: solid; }
+        .comparison-card.original { background: var(--bg-surface); border-color: var(--border); }
+        .comparison-card.simplified { background: linear-gradient(135deg, var(--low-bg), var(--bg-surface)); border-color: var(--low-text); }
+        .comparison-card h3 { font-size: 1.1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .comparison-card .text-content { font-size: 1rem; line-height: 1.8; color: var(--text-primary); }
+        .word-changes-section { margin-top: 1.5rem; }
         .word-changes-section h4 { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 1rem; }
         .word-changes-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-        .word-change-item { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--bg-card); border-radius: 50px; font-size: 0.9rem; border: 1px solid var(--border); }
+        .word-change-item { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: var(--bg-card); border-radius: 50px; font-size: 0.9rem; border: 1px solid var(--border); transition: all 0.2s; }
+        .word-change-item:hover { transform: scale(1.05); box-shadow: var(--shadow); }
         .word-old { color: var(--high-text); text-decoration: line-through; }
         .word-arrow { color: var(--text-muted); }
         .word-new { color: var(--low-text); font-weight: 600; }
+        .simplify-stats-bar { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .simplify-stat { text-align: center; padding: 1rem 1.5rem; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); }
+        .simplify-stat-value { font-family: 'Poppins', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .simplify-stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem; }
 
-        /* Reviews */
+        /* ==================== REVIEWS ==================== */
         .reviews-carousel { position: relative; overflow: hidden; margin: 2rem 0; }
         .reviews-track { display: flex; gap: 1.5rem; transition: transform 0.5s ease; }
         .review-card { flex: 0 0 calc(33.333% - 1rem); background: var(--bg-card); border-radius: 24px; padding: 2rem; border: 1px solid var(--border); box-shadow: var(--shadow); transition: all 0.3s; }
         .review-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
         .review-stars { display: flex; gap: 0.25rem; margin-bottom: 1rem; }
         .star { color: #fbbf24; font-size: 1.25rem; }
+        .star.empty { color: var(--border); }
         .review-text { font-size: 1.05rem; line-height: 1.7; color: var(--text-primary); margin-bottom: 1.5rem; font-style: italic; }
         .review-author { display: flex; align-items: center; gap: 1rem; }
         .review-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: white; font-weight: 700; }
         .review-info h4 { font-size: 1rem; font-weight: 600; }
         .review-info p { font-size: 0.85rem; color: var(--text-secondary); }
-        .carousel-controls { display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; }
-        .carousel-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; transition: all 0.2s; }
+        .carousel-controls { display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; align-items: center; }
+        .carousel-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; transition: all 0.2s; color: var(--text-primary); }
         .carousel-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .carousel-dots { display: flex; gap: 0.5rem; }
+        .carousel-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); cursor: pointer; transition: all 0.3s; border: none; }
+        .carousel-dot.active { background: var(--accent); width: 28px; border-radius: 5px; }
         .reviews-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; max-width: 600px; margin: 3rem auto; text-align: center; }
 
-        /* About */
+        /* ==================== ABOUT ==================== */
         .about-card { background: var(--bg-card); border-radius: 24px; padding: 3rem; border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 2rem; }
         .about-card h2 { font-family: 'Poppins', sans-serif; font-size: 2rem; margin-bottom: 1.5rem; }
         .about-card p { color: var(--text-secondary); line-height: 1.8; margin-bottom: 1rem; }
@@ -291,13 +329,20 @@
         .tech-stack { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
         .tech-tag { padding: 0.5rem 1rem; background: var(--bg-surface); border-radius: 50px; font-size: 0.9rem; color: var(--text-secondary); border: 1px solid var(--border); }
 
-        /* Footer */
+        /* ==================== FOOTER ==================== */
         .footer { background: var(--bg-card); border-top: 1px solid var(--border); padding: 3rem 2rem; margin-top: 4rem; }
         .footer-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
         .footer-logo { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.25rem; background: linear-gradient(135deg, var(--accent), var(--accent-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .footer-text { color: var(--text-muted); font-size: 0.9rem; }
 
-        /* Responsive */
+        /* ==================== ERROR STATE ==================== */
+        .error-card { background: var(--bg-card); border-radius: 20px; padding: 3rem; text-align: center; border: 2px solid var(--high-bar); margin: 2rem 0; }
+        .error-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .error-title { font-family: 'Poppins', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--high-text); margin-bottom: 0.5rem; }
+        .error-message { color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (min-width: 769px) { .kbd-hint { display: inline-block; } }
         @media (max-width: 1024px) { .review-card { flex: 0 0 calc(50% - 0.75rem); } }
         @media (max-width: 768px) {
             .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-nav); flex-direction: column; padding: 1rem; border-bottom: 1px solid var(--border); }
@@ -308,37 +353,56 @@
             .study-plan-grid { grid-template-columns: repeat(2, 1fr); }
             .review-card { flex: 0 0 100%; }
             .score-number { font-size: 4rem; }
+            .simplify-comparison { grid-template-columns: 1fr; }
         }
         @media (max-width: 480px) {
             .container { padding: 1rem; }
             .hero h1 { font-size: 2rem; }
             .study-plan-grid { grid-template-columns: 1fr; }
             .btn { width: 100%; justify-content: center; }
+            .export-bar { justify-content: center; }
         }
     </style>
 </head>
 <body>
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- PROGRESS OVERLAY -->
+    <div class="progress-overlay" id="progressOverlay">
+        <div class="progress-card">
+            <div class="progress-icon" id="progressIcon">🧠</div>
+            <div class="progress-title" id="progressTitle">Analyzing Text...</div>
+            <div class="progress-subtitle" id="progressSubtitle">Running NLP models on your text</div>
+            <div class="progress-bar-track"><div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div></div>
+            <div class="progress-steps" id="progressSteps">
+                <div class="progress-step" id="step-parse"><span class="progress-step-dot"></span> Parsing</div>
+                <div class="progress-step" id="step-features"><span class="progress-step-dot"></span> Features</div>
+                <div class="progress-step" id="step-score"><span class="progress-step-dot"></span> Scoring</div>
+                <div class="progress-step" id="step-plan"><span class="progress-step-dot"></span> Planning</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION -->
     <nav class="navbar" id="navbar">
         <div class="nav-container">
-            <a href="#" class="nav-logo" onclick="showPage('home')">
-                <span class="nav-logo-icon">🧠</span>
-                <span>CognitiveLoad AI</span>
-            </a>
+            <a class="nav-logo" onclick="showPage('home')"><span class="nav-logo-icon">🧠</span><span>CognitiveLoad AI</span></a>
             <div class="nav-links" id="navLinks">
-                <a href="#" class="nav-link active" data-page="home" onclick="showPage('home')">Home</a>
-                <a href="#" class="nav-link" data-page="analyze" onclick="showPage('analyze')">Analyze Text</a>
-                <a href="#" class="nav-link" data-page="simplify" onclick="showPage('simplify')">Simplify Text</a>
-                <a href="#" class="nav-link" data-page="reviews" onclick="showPage('reviews')">Reviews</a>
-                <a href="#" class="nav-link" data-page="about" onclick="showPage('about')">About</a>
+                <a class="nav-link active" data-page="home" onclick="showPage('home')">Home</a>
+                <a class="nav-link" data-page="analyze" onclick="showPage('analyze')">Analyze Text</a>
+                <a class="nav-link" data-page="simplify" onclick="showPage('simplify')">Simplify Text</a>
+                <a class="nav-link" data-page="reviews" onclick="showPage('reviews')">Reviews</a>
+                <a class="nav-link" data-page="about" onclick="showPage('about')">About</a>
             </div>
             <div class="nav-actions">
-                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme"><span id="themeIcon">🌙</span></button>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme (T)"><span id="themeIcon">🌙</span></button>
                 <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
             </div>
         </div>
     </nav>
 
-    <!-- HOME PAGE -->
+    <!-- ==================== HOME PAGE ==================== -->
     <div class="page active" id="page-home">
         <section class="hero">
             <div class="hero-badge"><span class="hero-badge-dot"></span><span>AI-Powered Learning Assistant</span></div>
@@ -353,11 +417,11 @@
             <div class="section-header"><h2>Powerful Features</h2><p>Everything you need to optimize your study sessions</p></div>
             <div class="features-grid">
                 <div class="feature-card"><div class="feature-icon">📊</div><h3>Cognitive Load Score</h3><p>Get a 0-100 difficulty score based on sentence length, vocabulary complexity, and abstract concept density.</p></div>
-                <div class="feature-card"><div class="feature-icon">📈</div><h3>Feature Breakdown</h3><p>Visual charts showing exactly what makes your text difficult with color-coded metrics.</p></div>
-                <div class="feature-card"><div class="feature-icon">📅</div><h3>Study Planning</h3><p>Personalized recommendations for session length, breaks, and how to chunk your material.</p></div>
+                <div class="feature-card"><div class="feature-icon">📈</div><h3>Feature Breakdown</h3><p>Visual charts showing exactly what makes your text difficult with color-coded metrics and explanations.</p></div>
+                <div class="feature-card"><div class="feature-icon">📅</div><h3>Study Planning</h3><p>Personalized recommendations for session length, breaks, and how to chunk your material effectively.</p></div>
                 <div class="feature-card"><div class="feature-icon">✨</div><h3>Text Simplification</h3><p>Transform complex academic text into simpler, easier-to-understand versions automatically.</p></div>
                 <div class="feature-card"><div class="feature-icon">🎯</div><h3>Section Analysis</h3><p>Identify the hardest parts of your material so you know where to focus your energy.</p></div>
-                <div class="feature-card"><div class="feature-icon">🔒</div><h3>Privacy First</h3><p>No accounts, no data storage. Your text is analyzed and forgotten immediately.</p></div>
+                <div class="feature-card"><div class="feature-icon">📥</div><h3>Export Results</h3><p>Download your analysis as JSON, CSV, or plain text. File upload support for .txt files included.</p></div>
             </div>
         </section>
         <section class="stats-section">
@@ -375,10 +439,10 @@
         </section>
     </div>
 
-    <!-- ANALYZE PAGE -->
+    <!-- ==================== ANALYZE PAGE ==================== -->
     <div class="page" id="page-analyze">
         <div class="container" style="max-width: 1000px;">
-            <div class="page-header"><h1>🔍 Cognitive Load Analyzer</h1><p>Paste your study material to see how challenging it is</p></div>
+            <div class="page-header"><h1>🔍 Cognitive Load Analyzer</h1><p>Paste your study material or upload a text file</p></div>
             <div class="input-card">
                 <div class="input-header">
                     <h3>📄 Your Text</h3>
@@ -389,18 +453,37 @@
                         <button class="sample-btn" onclick="loadSample('simple')">📖 Simple</button>
                     </div>
                 </div>
+                <!-- File Drop Zone -->
+                <div class="file-drop-zone" id="analyzeDropZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="file-drop-icon">📁</div>
+                    <div class="file-drop-text">Drop a <strong>.txt file</strong> here or click to browse</div>
+                </div>
+                <input type="file" id="fileInput" accept=".txt,.md" style="display:none" onchange="handleFileUpload(event, 'analyzeInput')">
                 <div class="textarea-container">
                     <textarea id="analyzeInput" placeholder="Paste your textbook content, lecture notes, or any study material here...
 
 💡 Tip: More text = more accurate analysis!" oninput="updateWordCount('analyzeInput', 'analyzeWordCount')"></textarea>
+                </div>
+                <div class="textarea-footer">
                     <span class="word-count" id="analyzeWordCount">0 words</span>
+                    <span class="input-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to analyze</span>
                 </div>
                 <button class="analyze-btn" id="analyzeBtn" onclick="analyzeText()">
                     <span id="analyzeBtnText">🔍 Analyze My Text</span>
                     <div class="spinner" id="analyzeSpinner" style="display: none;"></div>
                 </button>
             </div>
+
+            <!-- Error Container -->
+            <div id="analyzeError" style="display:none;"></div>
+
+            <!-- Results -->
             <div class="results-section" id="analyzeResults">
+                <div class="export-bar">
+                    <button class="export-btn" onclick="exportResults('json')">📋 Export JSON</button>
+                    <button class="export-btn" onclick="exportResults('csv')">📊 Export CSV</button>
+                    <button class="export-btn" onclick="exportResults('txt')">📄 Export TXT</button>
+                </div>
                 <div class="score-card">
                     <div class="score-number" id="scoreNumber">0</div>
                     <div class="score-label">out of 100 difficulty</div>
@@ -408,59 +491,95 @@
                     <div class="interpretation-box"><h4 id="interpretationTitle">Analysis Complete</h4><p id="interpretationText"></p></div>
                 </div>
                 <div class="results-grid">
-                    <div class="result-card"><h3>📊 What Makes It Hard</h3><div class="feature-chart" id="featureChart"></div></div>
-                    <div class="result-card"><h3>📅 Break It Up</h3><div class="study-plan-grid" id="studyPlan"></div></div>
+                    <div class="result-card" id="featuresCard">
+                        <div class="result-card-header" onclick="toggleCard('featuresCard')"><h3>📊 What Makes It Hard</h3><span class="collapse-icon">▼</span></div>
+                        <div class="result-card-body"><div class="feature-chart" id="featureChart"></div></div>
+                    </div>
+                    <div class="result-card" id="planCard">
+                        <div class="result-card-header" onclick="toggleCard('planCard')"><h3>📅 Study Plan</h3><span class="collapse-icon">▼</span></div>
+                        <div class="result-card-body"><div class="study-plan-grid" id="studyPlan"></div></div>
+                    </div>
                 </div>
-                <div class="result-card" style="margin-bottom: 2rem;"><h3>💡 Study Tips</h3><div class="tips-list" id="tipsList"></div></div>
+                <div class="result-card" id="tipsCard" style="margin-bottom: 2rem;">
+                    <div class="result-card-header" onclick="toggleCard('tipsCard')"><h3>💡 Study Tips</h3><span class="collapse-icon">▼</span></div>
+                    <div class="result-card-body"><div class="tips-list" id="tipsList"></div></div>
+                </div>
+                <div class="result-card" id="sectionsCard" style="margin-bottom: 2rem;">
+                    <div class="result-card-header" onclick="toggleCard('sectionsCard')"><h3>🎯 Section Analysis</h3><span class="collapse-icon">▼</span></div>
+                    <div class="result-card-body"><div class="sections-list" id="sectionsList"></div></div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- SIMPLIFY PAGE -->
+    <!-- ==================== SIMPLIFY PAGE ==================== -->
     <div class="page" id="page-simplify">
-        <div class="container" style="max-width: 900px;">
+        <div class="container" style="max-width: 1000px;">
             <div class="page-header"><h1>✨ Text Simplifier</h1><p>Transform complex text into easy-to-read language</p></div>
             <div class="input-card">
-                <div class="input-header"><h3>📄 Original Text</h3></div>
+                <div class="input-header">
+                    <h3>📄 Original Text</h3>
+                    <div class="sample-buttons">
+                        <button class="sample-btn" onclick="loadSimpleSample('academic')">🎓 Academic</button>
+                        <button class="sample-btn" onclick="loadSimpleSample('science')">🔬 Science</button>
+                    </div>
+                </div>
+                <div class="file-drop-zone" id="simplifyDropZone" onclick="document.getElementById('simplifyFileInput').click()">
+                    <div class="file-drop-icon">📁</div>
+                    <div class="file-drop-text">Drop a <strong>.txt file</strong> here or click to browse</div>
+                </div>
+                <input type="file" id="simplifyFileInput" accept=".txt,.md" style="display:none" onchange="handleFileUpload(event, 'simplifyInput')">
                 <div class="textarea-container">
                     <textarea id="simplifyInput" placeholder="Paste complex academic text here and we'll make it easier to understand...
 
 💡 Works best with textbook paragraphs or lecture notes!" oninput="updateWordCount('simplifyInput', 'simplifyWordCount')"></textarea>
+                </div>
+                <div class="textarea-footer">
                     <span class="word-count" id="simplifyWordCount">0 words</span>
+                    <span class="input-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to simplify</span>
                 </div>
                 <button class="analyze-btn" id="simplifyBtn" onclick="simplifyText()">
                     <span id="simplifyBtnText">✨ Simplify Text</span>
                     <div class="spinner" id="simplifySpinner" style="display: none;"></div>
                 </button>
             </div>
+            <div id="simplifyError" style="display:none;"></div>
             <div class="simplify-output" id="simplifyOutput">
-                <div class="simplified-card">
-                    <h3>📝 Simplified Version</h3>
-                    <div class="simplified-text" id="simplifiedText"></div>
-                    <div class="word-changes-section" id="wordChangesSection">
-                        <h4>🔄 Words Simplified</h4>
-                        <div class="word-changes-list" id="wordChangesList"></div>
-                    </div>
+                <div class="simplify-stats-bar" id="simplifyStatsBar"></div>
+                <div class="simplify-comparison">
+                    <div class="comparison-card original"><h3>📄 Original</h3><div class="text-content" id="originalText"></div></div>
+                    <div class="comparison-card simplified"><h3>✨ Simplified</h3><div class="text-content" id="simplifiedText"></div></div>
+                </div>
+                <div class="word-changes-section" id="wordChangesSection">
+                    <h4>🔄 Words Simplified</h4>
+                    <div class="word-changes-list" id="wordChangesList"></div>
+                </div>
+                <div class="export-bar" style="margin-top: 1.5rem;">
+                    <button class="export-btn" onclick="exportSimplified()">📄 Download Simplified Text</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- REVIEWS PAGE -->
+    <!-- ==================== REVIEWS PAGE ==================== -->
     <div class="page" id="page-reviews">
         <div class="container" style="max-width: 1200px;">
             <div class="page-header"><h1>⭐ Student Reviews</h1><p>See what students are saying about CognitiveLoad AI</p></div>
             <div class="reviews-carousel">
                 <div class="reviews-track" id="reviewsTrack">
                     <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div><p class="review-text">"This helped me pass my IGCSEs! I used it to analyze my revision notes and it told me exactly which sections needed more time. Game changer!"</p><div class="review-author"><div class="review-avatar">S</div><div class="review-info"><h4>Sarah M.</h4><p>IGCSE Student, UK</p></div></div></div>
-                    <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div><p class="review-text">"Made my revision much easier and faster. The text simplifier is incredible - it turns complicated biology text into something I can actually understand."</p><div class="review-author"><div class="review-avatar">J</div><div class="review-info"><h4>James K.</h4><p>A-Level Student, UK</p></div></div></div>
-                    <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">☆</span></div><p class="review-text">"Finally understand why some textbooks feel so hard to read! The breakdown showing sentence length and vocabulary complexity helped me adjust my study approach."</p><div class="review-author"><div class="review-avatar">A</div><div class="review-info"><h4>Aisha R.</h4><p>University Freshman, Canada</p></div></div></div>
+                    <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div><p class="review-text">"Made my revision much easier and faster. The text simplifier is incredible — it turns complicated biology text into something I can actually understand."</p><div class="review-author"><div class="review-avatar">J</div><div class="review-info"><h4>James K.</h4><p>A-Level Student, UK</p></div></div></div>
+                    <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star empty">☆</span></div><p class="review-text">"Finally understand why some textbooks feel so hard to read! The breakdown charts helped me adjust my study approach completely."</p><div class="review-author"><div class="review-avatar">A</div><div class="review-info"><h4>Aisha R.</h4><p>University Freshman, Canada</p></div></div></div>
                     <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div><p class="review-text">"I'm a teacher and I use this to check if my materials are appropriate for my students. Helps me identify when I'm making things too complex."</p><div class="review-author"><div class="review-avatar">M</div><div class="review-info"><h4>Mr. Thompson</h4><p>High School Teacher, USA</p></div></div></div>
-                    <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div><p class="review-text">"The study planning feature is so helpful! It tells me exactly how long I should study and when to take breaks based on how hard the material is."</p><div class="review-author"><div class="review-avatar">L</div><div class="review-info"><h4>Lisa C.</h4><p>Medical Student, Australia</p></div></div></div>
-                    <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">☆</span></div><p class="review-text">"Great for non-native English speakers like me. The text simplifier helps me understand difficult academic papers for my research."</p><div class="review-author"><div class="review-avatar">H</div><div class="review-info"><h4>Hans W.</h4><p>PhD Candidate, Germany</p></div></div></div>
+                    <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span></div><p class="review-text">"The study planning feature is amazing! It tells me exactly how long to study and when to take breaks based on difficulty. My grades went up."</p><div class="review-author"><div class="review-avatar">L</div><div class="review-info"><h4>Lisa C.</h4><p>Medical Student, Australia</p></div></div></div>
+                    <div class="review-card"><div class="review-stars"><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star empty">☆</span></div><p class="review-text">"Great for non-native English speakers. The text simplifier helps me understand difficult academic papers for my research. Export feature is a plus!"</p><div class="review-author"><div class="review-avatar">H</div><div class="review-info"><h4>Hans W.</h4><p>PhD Candidate, Germany</p></div></div></div>
                 </div>
             </div>
-            <div class="carousel-controls"><button class="carousel-btn" onclick="moveCarousel(-1)">←</button><button class="carousel-btn" onclick="moveCarousel(1)">→</button></div>
+            <div class="carousel-controls">
+                <button class="carousel-btn" onclick="moveCarousel(-1)">←</button>
+                <div class="carousel-dots" id="carouselDots"></div>
+                <button class="carousel-btn" onclick="moveCarousel(1)">→</button>
+            </div>
             <div class="reviews-stats">
                 <div class="stat-item"><div class="stat-number">4.8</div><div class="stat-label">Average Rating</div></div>
                 <div class="stat-item"><div class="stat-number">500+</div><div class="stat-label">Happy Students</div></div>
@@ -469,13 +588,13 @@
         </div>
     </div>
 
-    <!-- ABOUT PAGE -->
+    <!-- ==================== ABOUT PAGE ==================== -->
     <div class="page" id="page-about">
         <div class="container" style="max-width: 800px;">
             <div class="page-header"><h1>ℹ️ About CognitiveLoad AI</h1><p>Helping students learn smarter, not harder</p></div>
-            <div class="about-card"><h2>Our Mission</h2><p>CognitiveLoad AI was built with a simple goal: help students understand why some study materials feel harder than others and what they can do about it.</p><p>Using natural language processing (NLP), we analyze text for factors that contribute to cognitive load—how much mental effort is required to understand something.</p><p><strong>We believe in ethical, transparent AI.</strong> That's why we show you exactly what factors contribute to your score.</p></div>
-            <div class="about-card"><h2>How It Works</h2><p>Our analysis looks at five key features:</p><ul><li><strong>Sentence Length</strong> — Longer sentences require more working memory</li><li><strong>Vocabulary Complexity</strong> — Rare/technical words increase cognitive load</li><li><strong>Abstract Density</strong> — Abstract concepts are harder to visualize</li><li><strong>Concept Repetition</strong> — Repetition helps reinforce learning</li><li><strong>Readability</strong> — Overall text difficulty using Flesch-based metrics</li></ul></div>
-            <div class="about-card"><h2>Technology Stack</h2><div class="tech-stack"><span class="tech-tag">Python</span><span class="tech-tag">NLP</span><span class="tech-tag">Vercel</span><span class="tech-tag">HTML/CSS/JS</span><span class="tech-tag">Serverless</span></div></div>
+            <div class="about-card"><h2>Our Mission</h2><p>CognitiveLoad AI was built with a simple goal: help students understand why some study materials feel harder than others and what they can do about it.</p><p>Using natural language processing (NLP), we analyze text for factors that contribute to cognitive load — how much mental effort is required to understand something.</p><p><strong>We believe in ethical, transparent AI.</strong> That's why we show you exactly what factors contribute to your score.</p></div>
+            <div class="about-card"><h2>How It Works</h2><p>Our analysis looks at five key features:</p><ul><li><strong>Sentence Length</strong> — Longer sentences require more working memory</li><li><strong>Vocabulary Complexity</strong> — Rare/technical words increase cognitive load</li><li><strong>Abstract Density</strong> — Abstract concepts are harder to visualize</li><li><strong>Concept Repetition</strong> — Repetition helps reinforce learning (reduces load)</li><li><strong>Readability</strong> — Overall text difficulty using Flesch-based metrics</li></ul></div>
+            <div class="about-card"><h2>Technology Stack</h2><div class="tech-stack"><span class="tech-tag">Python</span><span class="tech-tag">NLP</span><span class="tech-tag">Vercel Serverless</span><span class="tech-tag">HTML / CSS / JS</span><span class="tech-tag">REST API</span></div></div>
             <div class="about-card"><h2>Connect With Us</h2><p>CognitiveLoad AI is open source:</p><div class="about-links"><a href="https://github.com/thehans-mwe/CognitiveLoadAI" target="_blank" class="about-link github"><span>⌨️</span> GitHub</a><a href="https://linkedin.com" target="_blank" class="about-link linkedin"><span>💼</span> LinkedIn</a></div></div>
             <div class="about-card" style="text-align: center; background: linear-gradient(135deg, var(--accent-glow), transparent);"><h2>Privacy First</h2><p style="font-size: 1.1rem;">🔒 <strong>No accounts required</strong><br>🗑️ <strong>No data stored</strong><br>👁️ <strong>No tracking</strong></p></div>
         </div>
@@ -483,139 +602,535 @@
 
     <footer class="footer"><div class="footer-content"><div class="footer-logo">🧠 CognitiveLoad AI</div><div class="footer-text">Built with ❤️ for students everywhere</div></div></footer>
 
+    <!-- ==================== JAVASCRIPT ==================== -->
     <script>
-        const samples = {
-            biology: `Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize nutrients from carbon dioxide and water. Photosynthesis in plants generally involves the green pigment chlorophyll and generates oxygen as a by-product. The process occurs primarily in the leaves, specifically in the chloroplasts. During the light-dependent reactions, water molecules are split, releasing oxygen and producing ATP and NADPH.`,
-            physics: `The Copenhagen interpretation of quantum mechanics posits that physical systems do not have definite properties prior to measurement. The act of measurement causes the wavefunction to collapse, transitioning from a superposition of states to a single eigenstate. This interpretation introduces fundamental indeterminacy into physics, challenging classical notions of determinism.`,
-            history: `The Industrial Revolution began in Britain in the late 18th century. It was marked by a shift from manual labor to machine-based manufacturing. Key inventions included the steam engine, spinning jenny, and power loom. These innovations transformed textile production and sparked changes across many industries. The revolution led to urbanization as people moved from rural areas to factory towns.`,
-            simple: `Dogs are wonderful pets. They are loyal friends who love to play. Dogs need daily walks and exercise to stay healthy. Most dogs enjoy fetch and running around the park. They also need fresh water and nutritious food every day.`
-        };
+    /* =============== GLOBALS =============== */
+    let lastAnalysisData = null;
+    let lastSimplifyData = null;
+    let carouselPosition = 0;
+    let carouselAutoplay = null;
 
-        function toggleTheme() {
-            const html = document.documentElement;
-            const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
-            localStorage.setItem('theme', newTheme);
-        }
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    /* =============== SAMPLES =============== */
+    const samples = {
+        biology: `Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize nutrients from carbon dioxide and water. Photosynthesis in plants generally involves the green pigment chlorophyll and generates oxygen as a by-product. The process occurs primarily in the leaves, specifically in the chloroplasts. During the light-dependent reactions, water molecules are split, releasing oxygen and producing ATP and NADPH. The Calvin cycle then uses these energy carriers to fix carbon dioxide into glucose molecules.`,
+        physics: `The Copenhagen interpretation of quantum mechanics posits that physical systems do not have definite properties prior to measurement. The act of measurement causes the wavefunction to collapse, transitioning from a superposition of states to a single eigenstate. This interpretation introduces fundamental indeterminacy into physics, challenging classical notions of determinism. Heisenberg's uncertainty principle further demonstrates that conjugate variables cannot be simultaneously known with arbitrary precision.`,
+        history: `The Industrial Revolution began in Britain in the late 18th century. It was marked by a shift from manual labor to machine-based manufacturing. Key inventions included the steam engine, spinning jenny, and power loom. These innovations transformed textile production and sparked changes across many industries. The revolution led to urbanization as people moved from rural areas to factory towns seeking employment opportunities.`,
+        simple: `Dogs are wonderful pets. They are loyal friends who love to play. Dogs need daily walks and exercise to stay healthy. Most dogs enjoy fetch and running around the park. They also need fresh water and nutritious food every day.`
+    };
+    const simplifySamples = {
+        academic: `The epistemological ramifications of postmodernist philosophy necessitate a fundamental reconceptualization of traditional pedagogical methodologies. Educators must subsequently endeavor to facilitate the development of critical analytical competencies, utilizing interdisciplinary approaches that demonstrate the interconnectedness of disparate knowledge domains.`,
+        science: `Mitochondrial oxidative phosphorylation constitutes the predominant mechanism for adenosine triphosphate biosynthesis in eukaryotic organisms. This process utilizes the electrochemical gradient established across the inner mitochondrial membrane to facilitate the phosphorylation of adenosine diphosphate, consequently generating the cellular energy currency essential for metabolic processes.`
+    };
 
-        function showPage(pageName) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(`page-${pageName}`).classList.add('active');
-            document.querySelectorAll('.nav-link').forEach(l => { l.classList.remove('active'); if (l.dataset.page === pageName) l.classList.add('active'); });
-            document.getElementById('navLinks').classList.remove('open');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        function toggleMobileMenu() { document.getElementById('navLinks').classList.toggle('open'); }
-        window.addEventListener('scroll', () => { document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50); });
+    /* =============== TOAST SYSTEM =============== */
+    function showToast(type, title, message, duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span class="toast-icon">${icons[type] || 'ℹ️'}</span><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-message">${message}</div></div><button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button><div class="toast-bar" style="width: 100%"></div>`;
+        container.appendChild(toast);
+        const bar = toast.querySelector('.toast-bar');
+        bar.style.transitionDuration = duration + 'ms';
+        requestAnimationFrame(() => { bar.style.width = '0%'; });
+        setTimeout(() => dismissToast(toast), duration);
+        return toast;
+    }
+    function dismissToast(toast) {
+        if (!toast || toast.classList.contains('removing')) return;
+        toast.classList.add('removing');
+        setTimeout(() => toast.remove(), 300);
+    }
 
-        function updateWordCount(inputId, countId) {
-            const text = document.getElementById(inputId).value.trim();
-            const words = text ? text.split(/\s+/).filter(w => w).length : 0;
-            document.getElementById(countId).textContent = `${words} words`;
-        }
-        function loadSample(key) {
-            document.getElementById('analyzeInput').value = samples[key];
-            updateWordCount('analyzeInput', 'analyzeWordCount');
-        }
-
-        async function analyzeText() {
-            const text = document.getElementById('analyzeInput').value.trim();
-            if (!text || text.split(/\s+/).length < 10) { alert('Please enter at least 10 words.'); return; }
-            const btn = document.getElementById('analyzeBtn');
-            btn.disabled = true;
-            document.getElementById('analyzeBtnText').textContent = 'Analyzing...';
-            document.getElementById('analyzeSpinner').style.display = 'block';
-            try {
-                const response = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-                if (!response.ok) throw new Error('Analysis failed');
-                displayResults(await response.json());
-            } catch (error) { console.error(error); alert('Error analyzing text.'); }
-            finally { btn.disabled = false; document.getElementById('analyzeBtnText').textContent = '🔍 Analyze My Text'; document.getElementById('analyzeSpinner').style.display = 'none'; }
-        }
-
-        function displayResults(data) {
-            const results = document.getElementById('analyzeResults');
-            results.classList.add('visible');
-            results.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            const scoreNum = document.getElementById('scoreNumber');
-            scoreNum.textContent = Math.round(data.score);
-            scoreNum.className = 'score-number ' + data.classification.toLowerCase();
-            const badge = document.getElementById('classificationBadge');
-            badge.className = 'classification-badge ' + data.classification.toLowerCase();
-            document.getElementById('classificationEmoji').textContent = data.interpretation.emoji;
-            document.getElementById('classificationText').textContent = data.interpretation.title;
-            document.getElementById('interpretationTitle').textContent = data.interpretation.summary;
-            document.getElementById('interpretationText').textContent = data.interpretation.meaning;
-            const chartContainer = document.getElementById('featureChart');
-            chartContainer.innerHTML = '';
-            let delay = 0;
-            Object.entries(data.features).forEach(([key, feature]) => {
-                const level = feature.normalized < 35 ? 'low' : (feature.normalized < 65 ? 'medium' : 'high');
-                const item = document.createElement('div');
-                item.className = 'feature-item';
-                item.style.animationDelay = `${delay}s`;
-                item.innerHTML = `<div class="feature-header"><span class="feature-name">${feature.label}</span><span class="feature-value ${level}">${Math.round(feature.normalized)}</span></div><div class="feature-bar-container"><div class="feature-bar ${level}" style="width: ${feature.normalized}%; animation-delay: ${delay}s;"></div></div><div class="feature-explanation">${feature.explanation}</div>`;
-                chartContainer.appendChild(item);
-                delay += 0.1;
+    /* =============== PROGRESS OVERLAY =============== */
+    function showProgress(title, subtitle) {
+        document.getElementById('progressTitle').textContent = title;
+        document.getElementById('progressSubtitle').textContent = subtitle;
+        document.getElementById('progressBarFill').style.width = '0%';
+        document.querySelectorAll('.progress-step').forEach(s => { s.classList.remove('active', 'done'); });
+        document.getElementById('progressOverlay').classList.add('active');
+    }
+    function updateProgress(percent, stepId) {
+        document.getElementById('progressBarFill').style.width = percent + '%';
+        if (stepId) {
+            const allSteps = ['step-parse', 'step-features', 'step-score', 'step-plan'];
+            const idx = allSteps.indexOf(stepId);
+            allSteps.forEach((s, i) => {
+                const el = document.getElementById(s);
+                if (i < idx) { el.classList.remove('active'); el.classList.add('done'); }
+                else if (i === idx) { el.classList.add('active'); el.classList.remove('done'); }
+                else { el.classList.remove('active', 'done'); }
             });
-            const plan = data.study_plan;
-            document.getElementById('studyPlan').innerHTML = `
-                <div class="plan-item"><div class="plan-icon">⏱️</div><div class="plan-value">${formatTime(plan.total_time_mins)}</div><div class="plan-label">Total Time</div></div>
-                <div class="plan-item"><div class="plan-icon">📚</div><div class="plan-value">${plan.num_sessions}</div><div class="plan-label">Sessions</div></div>
-                <div class="plan-item"><div class="plan-icon">🎯</div><div class="plan-value">${plan.session_length}</div><div class="plan-label">Min/Session</div></div>
-                <div class="plan-item"><div class="plan-icon">☕</div><div class="plan-value">${plan.break_mins}</div><div class="plan-label">Min Break</div></div>
-                <div class="plan-item"><div class="plan-icon">📝</div><div class="plan-value">${plan.words_per_session}</div><div class="plan-label">Words/Session</div></div>
-                <div class="plan-item"><div class="plan-icon">📄</div><div class="plan-value">${plan.total_words}</div><div class="plan-label">Total Words</div></div>`;
-            document.getElementById('tipsList').innerHTML = data.tips.map((tip, i) => `<div class="tip-item" style="animation-delay: ${i * 0.1}s;"><span class="tip-icon">${tip.charAt(0)}</span><span>${tip.substring(2)}</span></div>`).join('');
         }
+    }
+    function hideProgress() { document.getElementById('progressOverlay').classList.remove('active'); }
 
-        async function simplifyText() {
-            const text = document.getElementById('simplifyInput').value.trim();
-            if (!text || text.split(/\s+/).length < 5) { alert('Please enter at least 5 words.'); return; }
-            const btn = document.getElementById('simplifyBtn');
-            btn.disabled = true;
-            document.getElementById('simplifyBtnText').textContent = 'Simplifying...';
-            document.getElementById('simplifySpinner').style.display = 'block';
-            try {
-                const response = await fetch('/api/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
-                if (!response.ok) throw new Error('Failed');
-                const data = await response.json();
-                document.getElementById('simplifyOutput').classList.add('visible');
-                document.getElementById('simplifyOutput').scrollIntoView({ behavior: 'smooth' });
-                document.getElementById('simplifiedText').textContent = data.simplified.text;
-                const changesList = document.getElementById('wordChangesList');
-                if (data.simplified.changes && data.simplified.changes.length > 0) {
-                    changesList.innerHTML = data.simplified.changes.map(c => `<span class="word-change-item"><span class="word-old">${c.original}</span><span class="word-arrow">→</span><span class="word-new">${c.simplified}</span></span>`).join('');
-                } else { changesList.innerHTML = '<span style="color: var(--text-muted);">No complex words found!</span>'; }
-            } catch (error) { console.error(error); alert('Error simplifying text.'); }
-            finally { btn.disabled = false; document.getElementById('simplifyBtnText').textContent = '✨ Simplify Text'; document.getElementById('simplifySpinner').style.display = 'none'; }
-        }
+    /* =============== THEME =============== */
+    function toggleTheme() {
+        const html = document.documentElement;
+        const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', newTheme);
+        document.getElementById('themeIcon').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        localStorage.setItem('theme', newTheme);
+    }
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('themeIcon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
 
-        let carouselPosition = 0;
-        function moveCarousel(direction) {
-            const track = document.getElementById('reviewsTrack');
-            const cards = track.querySelectorAll('.review-card');
-            const cardsVisible = window.innerWidth < 768 ? 1 : (window.innerWidth < 1024 ? 2 : 3);
-            const maxPosition = cards.length - cardsVisible;
-            carouselPosition += direction;
-            if (carouselPosition < 0) carouselPosition = maxPosition;
-            if (carouselPosition > maxPosition) carouselPosition = 0;
-            const cardWidth = cards[0].offsetWidth + 24;
-            track.style.transform = `translateX(-${carouselPosition * cardWidth}px)`;
-        }
-        setInterval(() => { if (document.getElementById('page-reviews').classList.contains('active')) moveCarousel(1); }, 5000);
+    /* =============== NAVIGATION =============== */
+    function showPage(pageName) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(`page-${pageName}`).classList.add('active');
+        document.querySelectorAll('.nav-link').forEach(l => { l.classList.remove('active'); if (l.dataset.page === pageName) l.classList.add('active'); });
+        document.getElementById('navLinks').classList.remove('open');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        history.replaceState(null, '', `#${pageName}`);
+    }
+    function toggleMobileMenu() { document.getElementById('navLinks').classList.toggle('open'); }
+    window.addEventListener('scroll', () => { document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50); });
+    // URL hash routing
+    window.addEventListener('load', () => { const hash = location.hash.slice(1); if (['home','analyze','simplify','reviews','about'].includes(hash)) showPage(hash); });
 
-        function formatTime(minutes) {
-            if (minutes < 1) return '<1m';
-            if (minutes < 60) return `${Math.round(minutes)}m`;
-            const hrs = Math.floor(minutes / 60);
-            const mins = Math.round(minutes % 60);
-            return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+    /* =============== INPUT HELPERS =============== */
+    function updateWordCount(inputId, countId) {
+        const text = document.getElementById(inputId).value.trim();
+        const words = text ? text.split(/\s+/).filter(w => w).length : 0;
+        const el = document.getElementById(countId);
+        el.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+        el.className = 'word-count' + (words > 0 && words < 10 ? ' warning' : words >= 10 ? ' good' : '');
+        // Clear invalid state
+        document.getElementById(inputId).classList.remove('invalid');
+    }
+    function loadSample(key) {
+        document.getElementById('analyzeInput').value = samples[key];
+        updateWordCount('analyzeInput', 'analyzeWordCount');
+        showToast('info', 'Sample Loaded', `${key.charAt(0).toUpperCase() + key.slice(1)} sample text loaded`);
+    }
+    function loadSimpleSample(key) {
+        document.getElementById('simplifyInput').value = simplifySamples[key];
+        updateWordCount('simplifyInput', 'simplifyWordCount');
+        showToast('info', 'Sample Loaded', `${key.charAt(0).toUpperCase() + key.slice(1)} sample text loaded`);
+    }
+
+    /* =============== FILE UPLOAD =============== */
+    function handleFileUpload(event, targetId) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (!file.name.match(/\.(txt|md)$/i)) {
+            showToast('error', 'Invalid File', 'Please upload a .txt or .md file');
+            return;
         }
+        if (file.size > 500000) {
+            showToast('warning', 'File Too Large', 'Please use files under 500 KB');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById(targetId).value = e.target.result;
+            const countId = targetId === 'analyzeInput' ? 'analyzeWordCount' : 'simplifyWordCount';
+            updateWordCount(targetId, countId);
+            showToast('success', 'File Loaded', `${file.name} loaded successfully`);
+        };
+        reader.onerror = () => showToast('error', 'Read Error', 'Could not read the file');
+        reader.readAsText(file);
+    }
+    // Drag and drop
+    ['analyzeDropZone', 'simplifyDropZone'].forEach(id => {
+        const zone = document.getElementById(id);
+        if (!zone) return;
+        const targetId = id === 'analyzeDropZone' ? 'analyzeInput' : 'simplifyInput';
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault(); zone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFileUpload({ target: { files: [file] }}, targetId);
+        });
+    });
+
+    /* =============== COLLAPSIBLE CARDS =============== */
+    function toggleCard(cardId) {
+        document.getElementById(cardId).classList.toggle('collapsed');
+    }
+
+    /* =============== VALIDATION =============== */
+    function validateInput(inputId, minWords) {
+        const textarea = document.getElementById(inputId);
+        const text = textarea.value.trim();
+        const words = text ? text.split(/\s+/).filter(w => w).length : 0;
+        if (!text) {
+            textarea.classList.add('invalid');
+            showToast('warning', 'Empty Input', 'Please enter some text to analyze');
+            return false;
+        }
+        if (words < minWords) {
+            textarea.classList.add('invalid');
+            showToast('warning', 'Too Short', `Please enter at least ${minWords} words (currently ${words})`);
+            return false;
+        }
+        if (words > 10000) {
+            showToast('warning', 'Very Long Text', 'For best results, keep text under 10,000 words. Processing may be slower.');
+        }
+        textarea.classList.remove('invalid');
+        return true;
+    }
+
+    /* =============== ANALYZE TEXT =============== */
+    async function analyzeText() {
+        if (!validateInput('analyzeInput', 10)) return;
+        const text = document.getElementById('analyzeInput').value.trim();
+        const btn = document.getElementById('analyzeBtn');
+        btn.disabled = true;
+        document.getElementById('analyzeBtnText').textContent = 'Analyzing...';
+        document.getElementById('analyzeSpinner').style.display = 'block';
+        document.getElementById('analyzeError').style.display = 'none';
+        document.getElementById('analyzeResults').classList.remove('visible');
+
+        showProgress('Analyzing Your Text...', 'Running NLP analysis');
+        const steps = [
+            { pct: 15, id: 'step-parse', delay: 300 },
+            { pct: 45, id: 'step-features', delay: 600 },
+            { pct: 70, id: 'step-score', delay: 400 },
+            { pct: 90, id: 'step-plan', delay: 300 }
+        ];
+        let stepIdx = 0;
+        const stepInterval = setInterval(() => {
+            if (stepIdx < steps.length) { updateProgress(steps[stepIdx].pct, steps[stepIdx].id); stepIdx++; }
+        }, 500);
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            clearInterval(stepInterval);
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || `Server error (${response.status})`);
+            }
+            const data = await response.json();
+            lastAnalysisData = data;
+            updateProgress(100, 'step-plan');
+            await new Promise(r => setTimeout(r, 400));
+            hideProgress();
+            displayResults(data);
+            showToast('success', 'Analysis Complete', `Score: ${Math.round(data.score)}/100 — ${data.classification} cognitive load`);
+        } catch (error) {
+            clearInterval(stepInterval);
+            hideProgress();
+            console.error(error);
+            if (error.name === 'AbortError') {
+                showErrorState('analyzeError', 'Request Timed Out', 'The server took too long. Please try again or use shorter text.', 'analyzeText');
+                showToast('error', 'Timeout', 'Request timed out after 30 seconds');
+            } else {
+                showErrorState('analyzeError', 'Analysis Failed', error.message || 'Something went wrong. Please try again.', 'analyzeText');
+                showToast('error', 'Error', error.message || 'Failed to analyze text');
+            }
+        } finally {
+            btn.disabled = false;
+            document.getElementById('analyzeBtnText').textContent = '🔍 Analyze My Text';
+            document.getElementById('analyzeSpinner').style.display = 'none';
+        }
+    }
+
+    /* =============== DISPLAY RESULTS =============== */
+    function displayResults(data) {
+        const results = document.getElementById('analyzeResults');
+        results.classList.add('visible');
+        setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
+        // Score
+        const scoreNum = document.getElementById('scoreNumber');
+        animateCounter(scoreNum, Math.round(data.score));
+        scoreNum.className = 'score-number ' + data.classification.toLowerCase();
+
+        // Classification
+        const badge = document.getElementById('classificationBadge');
+        badge.className = 'classification-badge ' + data.classification.toLowerCase();
+        document.getElementById('classificationEmoji').textContent = data.interpretation.emoji;
+        document.getElementById('classificationText').textContent = data.interpretation.title;
+        document.getElementById('interpretationTitle').textContent = data.interpretation.summary;
+        document.getElementById('interpretationText').textContent = data.interpretation.meaning;
+
+        // Feature Chart
+        const chartContainer = document.getElementById('featureChart');
+        chartContainer.innerHTML = '';
+        let delay = 0;
+        const tooltips = {
+            sentence_length: 'Average words per sentence',
+            vocabulary_complexity: 'Percentage of uncommon/technical words',
+            abstract_density: 'Ratio of abstract concept words',
+            concept_repetition: 'How often key terms repeat (higher = better)',
+            readability: 'Flesch-based reading difficulty'
+        };
+        Object.entries(data.features).forEach(([key, feature]) => {
+            const level = feature.normalized < 35 ? 'low' : (feature.normalized < 65 ? 'medium' : 'high');
+            const item = document.createElement('div');
+            item.className = 'feature-item';
+            item.style.animationDelay = `${delay}s`;
+            item.innerHTML = `<div class="feature-header"><span class="feature-name">${feature.label} <span class="tooltip-trigger" data-tooltip="${tooltips[key] || ''}">ⓘ</span></span><span class="feature-value ${level}">${Math.round(feature.normalized)}</span></div><div class="feature-bar-container"><div class="feature-bar ${level}" style="width: ${feature.normalized}%; animation-delay: ${delay}s;"></div></div><div class="feature-explanation">${feature.explanation}</div>`;
+            chartContainer.appendChild(item);
+            delay += 0.1;
+        });
+
+        // Study Plan
+        const plan = data.study_plan;
+        document.getElementById('studyPlan').innerHTML = `
+            <div class="plan-item"><div class="plan-icon">⏱️</div><div class="plan-value">${formatTime(plan.total_time_mins)}</div><div class="plan-label">Total Time</div></div>
+            <div class="plan-item"><div class="plan-icon">📚</div><div class="plan-value">${plan.num_sessions}</div><div class="plan-label">Sessions</div></div>
+            <div class="plan-item"><div class="plan-icon">🎯</div><div class="plan-value">${plan.session_length}</div><div class="plan-label">Min/Session</div></div>
+            <div class="plan-item"><div class="plan-icon">☕</div><div class="plan-value">${plan.break_mins}</div><div class="plan-label">Min Break</div></div>
+            <div class="plan-item"><div class="plan-icon">📝</div><div class="plan-value">${plan.words_per_session}</div><div class="plan-label">Words/Session</div></div>
+            <div class="plan-item"><div class="plan-icon">📄</div><div class="plan-value">${plan.total_words}</div><div class="plan-label">Total Words</div></div>`;
+
+        // Tips
+        document.getElementById('tipsList').innerHTML = data.tips.map((tip, i) =>
+            `<div class="tip-item" style="animation: slideInLeft 0.4s ease-out ${i * 0.1}s both;"><span class="tip-icon">${tip.charAt(0)}</span><span>${tip.substring(2)}</span></div>`
+        ).join('');
+
+        // Section Analysis
+        const sectionsList = document.getElementById('sectionsList');
+        if (data.sections && data.sections.length > 0) {
+            sectionsList.innerHTML = data.sections.map(s => {
+                const level = s.score < 35 ? 'low' : (s.score < 65 ? 'medium' : 'high');
+                const barColor = level === 'low' ? 'var(--low-bar)' : (level === 'medium' ? 'var(--medium-bar)' : 'var(--high-bar)');
+                return `<div class="section-item"><span class="section-index ${level}">${s.index}</span><div class="section-details"><div class="section-preview">${escapeHtml(s.preview)}</div><div class="section-meta"><span>${s.word_count} words</span><span>Score: ${s.score}</span>${s.is_high_risk ? '<span style="color:var(--high-text);">⚠️ Hard</span>' : ''}</div></div><div class="section-score-bar"><div class="section-score-bar-fill" style="width:${s.score}%; background:${barColor};"></div></div></div>`;
+            }).join('');
+        } else {
+            sectionsList.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Single section detected — no breakdown needed</p>';
+        }
+    }
+
+    /* =============== SIMPLIFY TEXT =============== */
+    async function simplifyText() {
+        if (!validateInput('simplifyInput', 5)) return;
+        const text = document.getElementById('simplifyInput').value.trim();
+        const btn = document.getElementById('simplifyBtn');
+        btn.disabled = true;
+        document.getElementById('simplifyBtnText').textContent = 'Simplifying...';
+        document.getElementById('simplifySpinner').style.display = 'block';
+        document.getElementById('simplifyError').style.display = 'none';
+        document.getElementById('simplifyOutput').classList.remove('visible');
+
+        showProgress('Simplifying Text...', 'Finding complex words and phrases');
+        updateProgress(30, 'step-parse');
+
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text }),
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.error || `Server error (${response.status})`);
+            }
+            const data = await response.json();
+            lastSimplifyData = data;
+            updateProgress(100, 'step-plan');
+            await new Promise(r => setTimeout(r, 300));
+            hideProgress();
+            displaySimplified(data, text);
+            showToast('success', 'Text Simplified', `${data.simplified.changes_count} word${data.simplified.changes_count !== 1 ? 's' : ''} simplified`);
+        } catch (error) {
+            hideProgress();
+            console.error(error);
+            if (error.name === 'AbortError') {
+                showErrorState('simplifyError', 'Request Timed Out', 'Please try again with shorter text.', 'simplifyText');
+                showToast('error', 'Timeout', 'Request timed out');
+            } else {
+                showErrorState('simplifyError', 'Simplification Failed', error.message || 'Something went wrong.', 'simplifyText');
+                showToast('error', 'Error', error.message || 'Failed to simplify');
+            }
+        } finally {
+            btn.disabled = false;
+            document.getElementById('simplifyBtnText').textContent = '✨ Simplify Text';
+            document.getElementById('simplifySpinner').style.display = 'none';
+        }
+    }
+
+    function displaySimplified(data, originalText) {
+        document.getElementById('simplifyOutput').classList.add('visible');
+        setTimeout(() => document.getElementById('simplifyOutput').scrollIntoView({ behavior: 'smooth' }), 100);
+
+        // Stats
+        const origWords = originalText.split(/\s+/).length;
+        const simpWords = data.simplified.text.split(/\s+/).length;
+        document.getElementById('simplifyStatsBar').innerHTML = `
+            <div class="simplify-stat"><div class="simplify-stat-value">${data.simplified.changes_count}</div><div class="simplify-stat-label">Words Changed</div></div>
+            <div class="simplify-stat"><div class="simplify-stat-value">${Math.round(data.score)}</div><div class="simplify-stat-label">Original Score</div></div>
+            <div class="simplify-stat"><div class="simplify-stat-value">${origWords}</div><div class="simplify-stat-label">Word Count</div></div>`;
+
+        // Comparison
+        document.getElementById('originalText').textContent = originalText;
+        document.getElementById('simplifiedText').textContent = data.simplified.text;
+
+        // Word changes
+        const changesList = document.getElementById('wordChangesList');
+        if (data.simplified.changes && data.simplified.changes.length > 0) {
+            changesList.innerHTML = data.simplified.changes.map(c =>
+                `<span class="word-change-item"><span class="word-old">${escapeHtml(c.original)}</span><span class="word-arrow">→</span><span class="word-new">${escapeHtml(c.simplified)}</span></span>`
+            ).join('');
+        } else {
+            changesList.innerHTML = '<span style="color: var(--text-muted);">No complex words found — text is already simple! 🎉</span>';
+        }
+    }
+
+    /* =============== ERROR STATE =============== */
+    function showErrorState(containerId, title, message, retryFn) {
+        const container = document.getElementById(containerId);
+        container.style.display = 'block';
+        container.innerHTML = `<div class="error-card"><div class="error-icon">😵</div><div class="error-title">${title}</div><div class="error-message">${message}</div><button class="btn btn-primary btn-sm" onclick="${retryFn}()">🔄 Try Again</button></div>`;
+        container.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    /* =============== EXPORT / DOWNLOAD =============== */
+    function exportResults(format) {
+        if (!lastAnalysisData) { showToast('warning', 'No Data', 'Analyze text first before exporting'); return; }
+        const data = lastAnalysisData;
+        let content, filename, mime;
+
+        if (format === 'json') {
+            content = JSON.stringify(data, null, 2);
+            filename = 'cognitive-load-analysis.json';
+            mime = 'application/json';
+        } else if (format === 'csv') {
+            const rows = [['Metric', 'Value', 'Normalized (0-100)', 'Level']];
+            Object.entries(data.features).forEach(([key, f]) => {
+                const lvl = f.normalized < 35 ? 'Low' : (f.normalized < 65 ? 'Medium' : 'High');
+                rows.push([f.label, f.raw, Math.round(f.normalized), lvl]);
+            });
+            rows.push([]);
+            rows.push(['Overall Score', data.score, '', data.classification]);
+            rows.push(['Total Words', data.study_plan.total_words]);
+            rows.push(['Sessions', data.study_plan.num_sessions]);
+            rows.push(['Session Length', data.study_plan.session_length + ' min']);
+            content = rows.map(r => r.join(',')).join('\n');
+            filename = 'cognitive-load-analysis.csv';
+            mime = 'text/csv';
+        } else {
+            const lines = [
+                '=== CognitiveLoad AI Analysis ===', '',
+                `Score: ${data.score}/100 (${data.classification})`, '',
+                '--- Feature Breakdown ---'
+            ];
+            Object.values(data.features).forEach(f => { lines.push(`${f.label}: ${Math.round(f.normalized)}/100 — ${f.explanation}`); });
+            lines.push('', '--- Study Plan ---');
+            lines.push(`Total Time: ${formatTime(data.study_plan.total_time_mins)}`);
+            lines.push(`Sessions: ${data.study_plan.num_sessions} x ${data.study_plan.session_length} min`);
+            lines.push(`Break: ${data.study_plan.break_mins} min`);
+            lines.push('', '--- Tips ---');
+            data.tips.forEach(t => lines.push(t));
+            content = lines.join('\n');
+            filename = 'cognitive-load-analysis.txt';
+            mime = 'text/plain';
+        }
+        downloadFile(content, filename, mime);
+        showToast('success', 'Exported!', `Downloaded as ${filename}`);
+    }
+
+    function exportSimplified() {
+        if (!lastSimplifyData) { showToast('warning', 'No Data', 'Simplify text first'); return; }
+        downloadFile(lastSimplifyData.simplified.text, 'simplified-text.txt', 'text/plain');
+        showToast('success', 'Downloaded', 'Simplified text saved');
+    }
+
+    function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    /* =============== CAROUSEL =============== */
+    function initCarouselDots() {
+        const track = document.getElementById('reviewsTrack');
+        const cards = track.querySelectorAll('.review-card');
+        const dotsContainer = document.getElementById('carouselDots');
+        const cardsVisible = window.innerWidth < 768 ? 1 : (window.innerWidth < 1024 ? 2 : 3);
+        const dotCount = Math.max(1, cards.length - cardsVisible + 1);
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < dotCount; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+            dot.onclick = () => { carouselPosition = i; renderCarousel(); };
+            dotsContainer.appendChild(dot);
+        }
+    }
+    function moveCarousel(direction) {
+        const track = document.getElementById('reviewsTrack');
+        const cards = track.querySelectorAll('.review-card');
+        const cardsVisible = window.innerWidth < 768 ? 1 : (window.innerWidth < 1024 ? 2 : 3);
+        const maxPosition = cards.length - cardsVisible;
+        carouselPosition += direction;
+        if (carouselPosition < 0) carouselPosition = maxPosition;
+        if (carouselPosition > maxPosition) carouselPosition = 0;
+        renderCarousel();
+    }
+    function renderCarousel() {
+        const track = document.getElementById('reviewsTrack');
+        const cards = track.querySelectorAll('.review-card');
+        if (!cards.length) return;
+        const cardWidth = cards[0].offsetWidth + 24;
+        track.style.transform = `translateX(-${carouselPosition * cardWidth}px)`;
+        document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === carouselPosition));
+    }
+    initCarouselDots();
+    window.addEventListener('resize', () => { carouselPosition = 0; initCarouselDots(); renderCarousel(); });
+    carouselAutoplay = setInterval(() => { if (document.getElementById('page-reviews').classList.contains('active')) moveCarousel(1); }, 5000);
+
+    /* =============== UTILITIES =============== */
+    function formatTime(minutes) {
+        if (minutes < 1) return '<1m';
+        if (minutes < 60) return `${Math.round(minutes)}m`;
+        const hrs = Math.floor(minutes / 60);
+        const mins = Math.round(minutes % 60);
+        return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+    }
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+    function animateCounter(el, target) {
+        let current = 0;
+        const step = Math.max(1, Math.ceil(target / 40));
+        const interval = setInterval(() => {
+            current += step;
+            if (current >= target) { current = target; clearInterval(interval); }
+            el.textContent = current;
+        }, 25);
+    }
+
+    /* =============== KEYBOARD SHORTCUTS =============== */
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+Enter to submit
+        if (e.ctrlKey && e.key === 'Enter') {
+            e.preventDefault();
+            if (document.getElementById('page-analyze').classList.contains('active')) analyzeText();
+            else if (document.getElementById('page-simplify').classList.contains('active')) simplifyText();
+        }
+        // T for theme toggle (not in textarea)
+        if (e.key === 't' && !['TEXTAREA', 'INPUT'].includes(document.activeElement.tagName)) {
+            toggleTheme();
+        }
+        // Escape to close mobile menu / progress
+        if (e.key === 'Escape') {
+            document.getElementById('navLinks').classList.remove('open');
+        }
+    });
     </script>
 </body>
 </html>
