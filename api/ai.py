@@ -166,7 +166,7 @@ def _call_groq(messages, model=MODEL_PRIMARY, max_tokens=2048, temperature=0.7):
             raise ValueError("AI authentication failed.")
         if e.code == 503 or e.code == 502:
             raise ValueError("AI service temporarily unavailable. Please try again.")
-        raise ValueError(f"AI service error ({e.code}): {error_body}")
+        raise ValueError(f"AI service error ({e.code})")
     except urllib.error.URLError as e:
         raise ValueError(f"Could not reach AI service: {str(e.reason)}")
     except json.JSONDecodeError:
@@ -236,12 +236,7 @@ class handler(BaseHTTPRequestHandler):
             'version': '1.0.0',
             'models': [MODEL_PRIMARY, MODEL_FALLBACK],
             'modes': ['simplify', 'tips', 'explain'],
-            'configured': bool(GROQ_API_KEY),
-            '_debug': {
-                'key_length': len(GROQ_API_KEY),
-                'key_prefix': GROQ_API_KEY[:8] if len(GROQ_API_KEY) > 8 else '???',
-                'key_suffix': GROQ_API_KEY[-4:] if len(GROQ_API_KEY) > 4 else '???'
-            }
+            'configured': bool(GROQ_API_KEY)
         })
 
     def do_POST(self):
