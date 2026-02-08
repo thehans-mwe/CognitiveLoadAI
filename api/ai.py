@@ -127,7 +127,8 @@ def _call_groq(messages, model=MODEL_PRIMARY, max_tokens=2048, temperature=0.7):
 
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "CognitiveLoadAI/1.0"
     }
 
     payload = json.dumps({
