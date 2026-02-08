@@ -165,7 +165,7 @@ def _call_groq(messages, model=MODEL_PRIMARY, max_tokens=2048, temperature=0.7):
             raise ValueError("AI authentication failed.")
         if e.code == 503 or e.code == 502:
             raise ValueError("AI service temporarily unavailable. Please try again.")
-        raise ValueError(f"AI service error ({e.code})")
+        raise ValueError(f"AI service error ({e.code}): {error_body}")
     except urllib.error.URLError as e:
         raise ValueError(f"Could not reach AI service: {str(e.reason)}")
     except json.JSONDecodeError:
