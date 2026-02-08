@@ -235,7 +235,12 @@ class handler(BaseHTTPRequestHandler):
             'version': '1.0.0',
             'models': [MODEL_PRIMARY, MODEL_FALLBACK],
             'modes': ['simplify', 'tips', 'explain'],
-            'configured': bool(GROQ_API_KEY)
+            'configured': bool(GROQ_API_KEY),
+            '_debug': {
+                'key_length': len(GROQ_API_KEY),
+                'key_prefix': GROQ_API_KEY[:8] if len(GROQ_API_KEY) > 8 else '???',
+                'key_suffix': GROQ_API_KEY[-4:] if len(GROQ_API_KEY) > 4 else '???'
+            }
         })
 
     def do_POST(self):
