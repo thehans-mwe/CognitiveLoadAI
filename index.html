@@ -302,6 +302,30 @@
         .simplify-stat-value{font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:700;color:var(--accent)}
         .simplify-stat-label{font-size:.8rem;color:var(--text-secondary);margin-top:.25rem}
 
+        /* AI Styles */
+        .ai-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .8rem;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:50px;font-size:.75rem;font-weight:600;letter-spacing:.03em;animation:glowPulse 2s ease-in-out infinite}
+        .ai-change-item{padding:.75rem 1rem;background:var(--bg-card);border-radius:12px;border:1px solid var(--border);margin-bottom:.5rem;font-size:.9rem;color:var(--text-secondary);line-height:1.6}
+        .ai-reduction-summary{padding:1rem 1.25rem;background:linear-gradient(135deg,var(--low-bg),var(--bg-surface));border-radius:12px;border:1px solid var(--low-text);margin-top:1rem;font-size:.95rem;color:var(--low-text);font-weight:600}
+        .ai-tips-section{margin-top:1.5rem}
+        .ai-tip-card{background:var(--bg-glass);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-radius:16px;padding:1.5rem;border:1px solid var(--glass-border);margin-bottom:1rem;transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .ai-tip-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.12)}
+        .ai-tip-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
+        .ai-tip-emoji{font-size:1.5rem}
+        .ai-tip-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--text-primary)}
+        .ai-tip-advice{font-size:.95rem;color:var(--text-secondary);line-height:1.7}
+        .ai-approach{padding:1.5rem;background:linear-gradient(135deg,var(--accent-glow),transparent);border-radius:16px;border:1px solid var(--glass-border);margin-top:1rem;font-size:.95rem;line-height:1.7;color:var(--text-secondary)}
+        .ai-approach strong{color:var(--accent)}
+        .ai-explain-section{margin-top:1.5rem}
+        .ai-explain-text{font-size:1rem;line-height:1.8;color:var(--text-secondary);margin-bottom:1.5rem}
+        .ai-concept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-bottom:1.5rem}
+        .ai-concept-card{padding:1rem;background:var(--bg-card);border-radius:12px;border:1px solid var(--border)}
+        .ai-concept-term{font-weight:700;color:var(--accent);margin-bottom:.25rem;font-size:.95rem}
+        .ai-concept-meaning{font-size:.85rem;color:var(--text-secondary);line-height:1.5}
+        .ai-analogy{padding:1.25rem;background:linear-gradient(135deg,rgba(102,126,234,.1),rgba(118,75,162,.1));border-radius:12px;border:1px solid rgba(102,126,234,.2);font-size:.95rem;line-height:1.7;color:var(--text-secondary)}
+        .btn-ai{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:14px;padding:1rem 2rem;font-size:1rem;font-weight:600;cursor:pointer;transition:all .3s;display:inline-flex;align-items:center;gap:.5rem}
+        .btn-ai:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(102,126,234,.4)}
+        .btn-ai:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
         /* Reviews */
         .reviews-carousel{position:relative;overflow:hidden;margin:2rem 0}
         .reviews-track{display:flex;gap:1.5rem;transition:transform .5s ease}
@@ -421,7 +445,7 @@
                 <div class="feature-card reveal"><div class="feature-icon">📊</div><h3>Cognitive Load Score</h3><p>Get a 0-100 difficulty score based on sentence length, vocabulary complexity, and abstract concept density.</p></div>
                 <div class="feature-card reveal reveal-delay-1"><div class="feature-icon">📈</div><h3>Feature Breakdown</h3><p>Visual charts showing exactly what makes your text difficult with color-coded metrics and tooltips.</p></div>
                 <div class="feature-card reveal reveal-delay-2"><div class="feature-icon">📅</div><h3>Study Planning</h3><p>Personalized recommendations for session length, breaks, and how to chunk your material.</p></div>
-                <div class="feature-card reveal reveal-delay-3"><div class="feature-icon">✨</div><h3>Text Simplification</h3><p>Transform complex academic text into simpler, easier-to-understand versions with 60+ word replacements.</p></div>
+                <div class="feature-card reveal reveal-delay-3"><div class="feature-icon">🤖</div><h3>AI Simplification</h3><p>Transform complex academic text into simpler language using Groq AI — powered by Llama 3.3 70B.</p></div>
                 <div class="feature-card reveal reveal-delay-4"><div class="feature-icon">🎯</div><h3>Section Analysis</h3><p>Identify the hardest parts of your material so you know where to focus your energy.</p></div>
                 <div class="feature-card reveal reveal-delay-5"><div class="feature-icon">📥</div><h3>Export Results</h3><p>Download your analysis as JSON, CSV, or plain text. Upload .txt files directly for analysis.</p></div>
             </div>
@@ -512,6 +536,29 @@
                     <div class="result-card-header" onclick="toggleCard('sectionsCard')"><h3>🎯 Section Analysis</h3><span class="collapse-icon">▼</span></div>
                     <div class="result-card-body"><div class="sections-list" id="sectionsList"></div></div>
                 </div>
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem">
+                    <button class="btn-ai" id="aiTipsBtn" onclick="getAITips()">
+                        <span id="aiTipsBtnText">🤖 Get AI Study Advice</span>
+                        <div class="spinner" id="aiTipsSpinner" style="display:none"></div>
+                    </button>
+                    <button class="btn-ai" id="aiExplainBtn" onclick="getAIExplain()" style="background:linear-gradient(135deg,#43e97b,#38f9d7)">
+                        <span id="aiExplainBtnText">🧠 AI Explain This</span>
+                        <div class="spinner" id="aiExplainSpinner" style="display:none"></div>
+                    </button>
+                </div>
+                <div class="result-card" id="aiTipsCard" style="margin-bottom:2rem;display:none">
+                    <div class="result-card-header" onclick="toggleCard('aiTipsCard')"><h3>🤖 AI Study Coach <span class="ai-badge">Powered by Groq</span></h3><span class="collapse-icon">▼</span></div>
+                    <div class="result-card-body">
+                        <div class="ai-tips-section" id="aiTipsList"></div>
+                        <div class="ai-approach" id="aiStudyApproach" style="display:none"></div>
+                    </div>
+                </div>
+                <div class="result-card" id="aiExplainCard" style="margin-bottom:2rem;display:none">
+                    <div class="result-card-header" onclick="toggleCard('aiExplainCard')"><h3>🧠 AI Explanation <span class="ai-badge">Powered by Groq</span></h3><span class="collapse-icon">▼</span></div>
+                    <div class="result-card-body">
+                        <div class="ai-explain-section" id="aiExplainContent"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -519,7 +566,7 @@
     <!-- ========== SIMPLIFY ========== -->
     <div class="page" id="page-simplify">
         <div class="container" style="max-width:1000px">
-            <div class="page-header"><div class="section-label" style="justify-content:center">Simplify</div><h1>✨ Text Simplifier</h1><p>Transform complex text into easy-to-read language</p></div>
+            <div class="page-header"><div class="section-label" style="justify-content:center">AI Simplify</div><h1>🤖 AI Text Simplifier <span class="ai-badge">Powered by Groq</span></h1><p>Transform complex text into easy-to-read language using AI</p></div>
             <div class="input-card">
                 <div class="input-header">
                     <h3>📄 Original Text</h3>
@@ -542,8 +589,8 @@
                     <span class="word-count" id="simplifyWordCount">0 words</span>
                     <span class="input-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to simplify</span>
                 </div>
-                <button class="analyze-btn" id="simplifyBtn" onclick="simplifyText()">
-                    <span id="simplifyBtnText">✨ Simplify Text</span>
+                <button class="analyze-btn" id="simplifyBtn" onclick="simplifyText()" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+                    <span id="simplifyBtnText">🤖 AI Simplify</span>
                     <div class="spinner" id="simplifySpinner" style="display:none"></div>
                 </button>
             </div>
@@ -846,36 +893,255 @@
         } else { sl.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:1rem">Single section — no breakdown needed</p>'; }
     }
 
-    /* =========== SIMPLIFY =========== */
+    /* =========== SIMPLIFY (AI-Powered with Fallback) =========== */
     async function simplifyText() {
         if (!navigator.onLine) { showToast('error', 'Offline', 'Check your internet connection'); return; }
         if (!validateInput('simplifyInput', 5)) return;
         const text = document.getElementById('simplifyInput').value.trim();
         const btn = document.getElementById('simplifyBtn');
         btn.disabled = true;
-        document.getElementById('simplifyBtnText').textContent = 'Simplifying...';
+        document.getElementById('simplifyBtnText').textContent = '🤖 AI is thinking...';
         document.getElementById('simplifySpinner').style.display = 'block';
         document.getElementById('simplifyError').style.display = 'none';
         document.getElementById('simplifyOutput').classList.remove('visible');
 
-        showProgress('Simplifying Text...', 'Finding complex words and phrases');
+        showProgress('AI Simplification...', 'Groq AI is rewriting your text');
         updateProgress(30, 'step-parse');
 
         try {
-            const data = await apiCall(text);
-            lastSimplifyData = data;
-            updateProgress(100, 'step-plan');
-            await new Promise(r => setTimeout(r, 300));
-            hideProgress();
-            displaySimplified(data, text);
-            showToast('success', 'Simplified!', `${data.simplified.changes_count} word${data.simplified.changes_count !== 1 ? 's' : ''} changed`);
-        } catch (error) {
-            hideProgress();
-            showErrorState('simplifyError', 'Simplification Failed', error.message || 'Something went wrong', 'simplifyText');
-            showToast('error', 'Error', error.message || 'Failed');
+            // Try AI-powered simplification first
+            const controller = new AbortController();
+            const tid = setTimeout(() => controller.abort(), 30000);
+            const aiResp = await fetch('/api/ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, mode: 'simplify' }),
+                signal: controller.signal
+            });
+            clearTimeout(tid);
+
+            if (aiResp.ok) {
+                const aiData = await aiResp.json();
+                updateProgress(100, 'step-plan');
+                await new Promise(r => setTimeout(r, 300));
+                hideProgress();
+                displayAISimplified(aiData, text);
+                const ms = aiData.processing_ms ? ` in ${(aiData.processing_ms/1000).toFixed(1)}s` : '';
+                showToast('success', '🤖 AI Simplified!', `${aiData.key_changes?.length || 0} key changes made${ms}`);
+                return;
+            }
+
+            // AI returned error — try fallback
+            const errData = await aiResp.json().catch(() => ({}));
+            if (errData.fallback) throw new Error('AI unavailable');
+            throw new Error(errData.error || 'AI error');
+
+        } catch (aiErr) {
+            // Fall back to basic word-swap simplification
+            console.warn('AI unavailable, falling back to basic:', aiErr.message);
+            try {
+                document.getElementById('simplifyBtnText').textContent = 'Simplifying (basic)...';
+                showProgress('Basic Simplification...', 'Using word-swap engine');
+                updateProgress(50, 'step-features');
+                const data = await apiCall(text);
+                lastSimplifyData = data;
+                updateProgress(100, 'step-plan');
+                await new Promise(r => setTimeout(r, 300));
+                hideProgress();
+                displaySimplified(data, text);
+                showToast('info', 'Basic Mode', `AI unavailable — ${data.simplified.changes_count} words swapped`);
+            } catch (error) {
+                hideProgress();
+                showErrorState('simplifyError', 'Simplification Failed', error.message || 'Something went wrong', 'simplifyText');
+                showToast('error', 'Error', error.message || 'Failed');
+            }
         } finally {
-            btn.disabled = false; document.getElementById('simplifyBtnText').textContent = '✨ Simplify Text'; document.getElementById('simplifySpinner').style.display = 'none';
+            btn.disabled = false;
+            document.getElementById('simplifyBtnText').textContent = '🤖 AI Simplify';
+            document.getElementById('simplifySpinner').style.display = 'none';
         }
+    }
+
+    function displayAISimplified(data, originalText) {
+        document.getElementById('simplifyOutput').classList.add('visible');
+        setTimeout(() => document.getElementById('simplifyOutput').scrollIntoView({ behavior: 'smooth' }), 100);
+
+        // Stats bar with AI info
+        const model = data._ai_meta?.model?.replace('llama-', 'Llama ').split('-vers')[0] || 'AI';
+        const tokens = data._ai_meta?.tokens_used || '—';
+        const speed = data.processing_ms ? (data.processing_ms/1000).toFixed(1) + 's' : '—';
+        document.getElementById('simplifyStatsBar').innerHTML = `
+            <div class="simplify-stat"><div class="simplify-stat-value" style="font-size:1.2rem">🤖</div><div class="simplify-stat-label">AI-Powered</div></div>
+            <div class="simplify-stat"><div class="simplify-stat-value">${data.key_changes?.length || 0}</div><div class="simplify-stat-label">Key Changes</div></div>
+            <div class="simplify-stat"><div class="simplify-stat-value">${speed}</div><div class="simplify-stat-label">Speed</div></div>
+            <div class="simplify-stat"><div class="simplify-stat-value">${tokens}</div><div class="simplify-stat-label">Tokens Used</div></div>`;
+
+        // Comparison
+        document.getElementById('originalText').textContent = originalText;
+        document.getElementById('simplifiedText').textContent = data.simplified_text || data.simplified?.text || '';
+
+        // Store for copy
+        lastSimplifyData = { simplified: { text: data.simplified_text || '' } };
+        document.getElementById('copySimplifiedBtn').textContent = '📋 Copy';
+        document.getElementById('copySimplifiedBtn').classList.remove('copied');
+
+        // AI key changes
+        const cl = document.getElementById('wordChangesList');
+        const section = document.getElementById('wordChangesSection');
+        section.querySelector('h4').textContent = '🤖 AI Changes Made';
+
+        if (data.key_changes && data.key_changes.length > 0) {
+            cl.innerHTML = data.key_changes.map(c =>
+                `<div class="ai-change-item">✨ ${esc(c)}</div>`
+            ).join('');
+            if (data.difficulty_reduction) {
+                cl.innerHTML += `<div class="ai-reduction-summary">📊 ${esc(data.difficulty_reduction)}</div>`;
+            }
+        } else {
+            cl.innerHTML = '<span style="color:var(--text-muted)">Text is already simple! 🎉</span>';
+        }
+    }
+
+    /* =========== AI STUDY TIPS =========== */
+    async function getAITips() {
+        if (!lastAnalysisData) { showToast('warning', 'No Data', 'Run analysis first'); return; }
+        const text = document.getElementById('analyzeInput').value.trim();
+        const btn = document.getElementById('aiTipsBtn');
+        btn.disabled = true;
+        document.getElementById('aiTipsBtnText').textContent = '🤖 AI is thinking...';
+        document.getElementById('aiTipsSpinner').style.display = 'block';
+
+        try {
+            const controller = new AbortController();
+            const tid = setTimeout(() => controller.abort(), 30000);
+            const resp = await fetch('/api/ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text,
+                    mode: 'tips',
+                    score: Math.round(lastAnalysisData.score),
+                    classification: lastAnalysisData.classification
+                }),
+                signal: controller.signal
+            });
+            clearTimeout(tid);
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.error || 'AI request failed');
+            }
+
+            const data = await resp.json();
+            displayAITips(data);
+            const ms = data.processing_ms ? ` (${(data.processing_ms/1000).toFixed(1)}s)` : '';
+            showToast('success', '🤖 AI Tips Ready', `5 personalized tips generated${ms}`);
+
+        } catch (error) {
+            showToast('error', 'AI Error', error.message || 'Could not get AI tips');
+        } finally {
+            btn.disabled = false;
+            document.getElementById('aiTipsBtnText').textContent = '🤖 Get AI Study Advice';
+            document.getElementById('aiTipsSpinner').style.display = 'none';
+        }
+    }
+
+    function displayAITips(data) {
+        const card = document.getElementById('aiTipsCard');
+        card.style.display = 'block';
+        setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
+        const list = document.getElementById('aiTipsList');
+        if (data.tips && data.tips.length > 0) {
+            list.innerHTML = data.tips.map((tip, i) => `
+                <div class="ai-tip-card" style="animation:fadeIn .5s ease-out ${i * 0.1}s both">
+                    <div class="ai-tip-header">
+                        <span class="ai-tip-emoji">${esc(tip.emoji || '💡')}</span>
+                        <span class="ai-tip-title">${esc(tip.title)}</span>
+                    </div>
+                    <div class="ai-tip-advice">${esc(tip.advice)}</div>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = '<p style="color:var(--text-muted);text-align:center">No tips generated</p>';
+        }
+
+        const approach = document.getElementById('aiStudyApproach');
+        if (data.study_approach) {
+            approach.style.display = 'block';
+            approach.innerHTML = `<strong>📋 Recommended Study Approach:</strong><br>${esc(data.study_approach)}`;
+        }
+    }
+
+    /* =========== AI EXPLAIN =========== */
+    async function getAIExplain() {
+        if (!lastAnalysisData) { showToast('warning', 'No Data', 'Run analysis first'); return; }
+        const text = document.getElementById('analyzeInput').value.trim();
+        const btn = document.getElementById('aiExplainBtn');
+        btn.disabled = true;
+        document.getElementById('aiExplainBtnText').textContent = '🧠 AI is thinking...';
+        document.getElementById('aiExplainSpinner').style.display = 'block';
+
+        try {
+            const controller = new AbortController();
+            const tid = setTimeout(() => controller.abort(), 30000);
+            const resp = await fetch('/api/ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, mode: 'explain' }),
+                signal: controller.signal
+            });
+            clearTimeout(tid);
+
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                throw new Error(err.error || 'AI request failed');
+            }
+
+            const data = await resp.json();
+            displayAIExplain(data);
+            const ms = data.processing_ms ? ` (${(data.processing_ms/1000).toFixed(1)}s)` : '';
+            showToast('success', '🧠 Explanation Ready', `AI broke it down for you${ms}`);
+
+        } catch (error) {
+            showToast('error', 'AI Error', error.message || 'Could not get explanation');
+        } finally {
+            btn.disabled = false;
+            document.getElementById('aiExplainBtnText').textContent = '🧠 AI Explain This';
+            document.getElementById('aiExplainSpinner').style.display = 'none';
+        }
+    }
+
+    function displayAIExplain(data) {
+        const card = document.getElementById('aiExplainCard');
+        card.style.display = 'block';
+        setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+
+        const content = document.getElementById('aiExplainContent');
+        let html = '';
+
+        if (data.explanation) {
+            html += `<div class="ai-explain-text">${esc(data.explanation)}</div>`;
+        }
+
+        if (data.key_concepts && data.key_concepts.length > 0) {
+            html += '<h4 style="margin-bottom:1rem;color:var(--text-secondary)">🔑 Key Concepts</h4>';
+            html += '<div class="ai-concept-grid">';
+            html += data.key_concepts.map(c => `
+                <div class="ai-concept-card">
+                    <div class="ai-concept-term">${esc(c.term)}</div>
+                    <div class="ai-concept-meaning">${esc(c.simple_meaning)}</div>
+                </div>
+            `).join('');
+            html += '</div>';
+        }
+
+        if (data.analogy) {
+            html += `<h4 style="margin-bottom:.75rem;color:var(--text-secondary)">💡 Think of it like this...</h4>`;
+            html += `<div class="ai-analogy">${esc(data.analogy)}</div>`;
+        }
+
+        content.innerHTML = html;
     }
 
     function displaySimplified(data, originalText) {
