@@ -331,7 +331,15 @@
         .about-link.github{background:#24292e;color:white}.about-link.github:hover{background:#1a1e22;transform:translateY(-2px)}
         .about-link.linkedin{background:#0077b5;color:white}.about-link.linkedin:hover{background:#006699;transform:translateY(-2px)}
         .tech-stack{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem}
-        .tech-tag{padding:.5rem 1rem;background:var(--bg-surface);border-radius:50px;font-size:.9rem;color:var(--text-secondary);border:1px solid var(--border)}
+        .tech-tag{padding:.5rem 1rem;background:var(--bg-surface);border-radius:50px;font-size:.9rem;color:var(--text-secondary);border:1px solid var(--border);transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .tech-tag:hover{transform:translateY(-3px) scale(1.05);background:var(--accent-glow);color:var(--accent);border-color:var(--accent);box-shadow:0 8px 25px rgba(0,180,150,.2)}
+        .about-card{transition:all .5s cubic-bezier(.16,1,.3,1)}
+        .about-card:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,.15),0 0 30px rgba(0,180,150,.08)}
+        .about-card h2{position:relative;display:inline-block}
+        .about-card h2::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--primary));border-radius:2px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+        .about-card:hover h2::after{width:100%}
+        .about-link{transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .about-link:hover{transform:translateY(-4px) scale(1.05);box-shadow:0 12px 30px rgba(0,0,0,.15)}
 
         /* Error State */
         .error-card{background:var(--bg-card);border-radius:20px;padding:3rem;text-align:center;border:2px solid var(--high-bar);margin:2rem 0}
@@ -583,14 +591,15 @@
     </div>
 
     <!-- ========== ABOUT ========== -->
-    <div class="page" id="page-about">
-        <div class="container" style="max-width:800px">
-            <div class="page-header"><div class="section-label" style="justify-content:center">About Us</div><h1>ℹ️ About CognitiveLoad AI</h1><p>Helping students learn smarter, not harder</p></div>
-            <div class="about-card"><h2>Our Mission</h2><p>CognitiveLoad AI was built with a simple goal: help students understand why some study materials feel harder than others and what they can do about it.</p><p>Using natural language processing (NLP), we analyze text for factors that contribute to cognitive load — how much mental effort is required to understand something.</p><p><strong>We believe in ethical, transparent AI.</strong> That's why we show you exactly what factors contribute to your score.</p></div>
-            <div class="about-card"><h2>How It Works</h2><p>Our v3.0 analysis engine examines five key features:</p><ul><li><strong>Sentence Length</strong> — Longer sentences require more working memory</li><li><strong>Vocabulary Complexity</strong> — Rare/technical words increase cognitive load</li><li><strong>Abstract Density</strong> — Abstract concepts are harder to visualize</li><li><strong>Concept Repetition</strong> — Repetition helps reinforce learning (reduces load)</li><li><strong>Readability</strong> — Overall text difficulty using Flesch-based metrics</li></ul><p style="margin-top:1rem">Edge cases like code blocks, all-caps text, number-heavy content, and repetitive text are automatically detected and flagged with warnings.</p></div>
-            <div class="about-card"><h2>Technology Stack</h2><div class="tech-stack"><span class="tech-tag">Python 3</span><span class="tech-tag">Pure NLP (no dependencies)</span><span class="tech-tag">Vercel Serverless</span><span class="tech-tag">HTML / CSS / JS</span><span class="tech-tag">LRU Cache</span><span class="tech-tag">REST API</span></div></div>
-            <div class="about-card"><h2>Connect With Us</h2><p>CognitiveLoad AI is open source:</p><div class="about-links"><a href="https://github.com/thehans-mwe/CognitiveLoadAI" target="_blank" class="about-link github"><span>⌨️</span> GitHub</a><a href="https://linkedin.com" target="_blank" class="about-link linkedin"><span>💼</span> LinkedIn</a></div></div>
-            <div class="about-card" style="text-align:center;background:linear-gradient(135deg,var(--accent-glow),transparent)"><h2>Privacy First</h2><p style="font-size:1.1rem">🔒 <strong>No accounts required</strong><br>🗑️ <strong>No data stored</strong><br>👁️ <strong>No tracking</strong></p></div>
+    <div class="page" id="page-about" style="position:relative;overflow:hidden">
+        <div class="floating-orbs" style="opacity:.4"><div class="orb orb-1" style="top:5%;left:80%"></div><div class="orb orb-3" style="bottom:15%;left:5%"></div><div class="orb orb-2" style="top:50%;right:5%"></div></div>
+        <div class="container" style="max-width:800px;position:relative;z-index:1">
+            <div class="page-header reveal"><div class="section-label" style="justify-content:center">About Us</div><h1>ℹ️ About CognitiveLoad AI</h1><p>Helping students learn smarter, not harder</p></div>
+            <div class="about-card reveal reveal-delay-1"><h2>🎯 Our Mission</h2><p>CognitiveLoad AI was built with a simple goal: help students understand why some study materials feel harder than others and what they can do about it.</p><p>Using natural language processing (NLP), we analyze text for factors that contribute to cognitive load — how much mental effort is required to understand something.</p><p><strong>We believe in ethical, transparent AI.</strong> That's why we show you exactly what factors contribute to your score.</p></div>
+            <div class="about-card reveal reveal-delay-2"><h2>⚙️ How It Works</h2><p>Our v3.0 analysis engine examines five key features:</p><ul><li><strong>Sentence Length</strong> — Longer sentences require more working memory</li><li><strong>Vocabulary Complexity</strong> — Rare/technical words increase cognitive load</li><li><strong>Abstract Density</strong> — Abstract concepts are harder to visualize</li><li><strong>Concept Repetition</strong> — Repetition helps reinforce learning (reduces load)</li><li><strong>Readability</strong> — Overall text difficulty using Flesch-based metrics</li></ul><p style="margin-top:1rem">Edge cases like code blocks, all-caps text, number-heavy content, and repetitive text are automatically detected and flagged with warnings.</p></div>
+            <div class="about-card reveal reveal-delay-3"><h2>🛠️ Technology Stack</h2><div class="tech-stack"><span class="tech-tag">Python 3</span><span class="tech-tag">Pure NLP (no dependencies)</span><span class="tech-tag">Vercel Serverless</span><span class="tech-tag">HTML / CSS / JS</span><span class="tech-tag">LRU Cache</span><span class="tech-tag">REST API</span></div></div>
+            <div class="about-card reveal reveal-delay-4"><h2>🤝 Connect With Us</h2><p>CognitiveLoad AI is open source:</p><div class="about-links"><a href="https://github.com/thehans-mwe/CognitiveLoadAI" target="_blank" class="about-link github"><span>⌨️</span> GitHub</a><a href="https://linkedin.com" target="_blank" class="about-link linkedin"><span>💼</span> LinkedIn</a></div></div>
+            <div class="about-card reveal reveal-delay-5" style="text-align:center;background:linear-gradient(135deg,var(--accent-glow),transparent)"><h2>🔐 Privacy First</h2><p style="font-size:1.1rem">🔒 <strong>No accounts required</strong><br>🗑️ <strong>No data stored</strong><br>👁️ <strong>No tracking</strong></p></div>
         </div>
     </div>
 
