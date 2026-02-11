@@ -32,7 +32,7 @@
         body{font-family:'Satoshi',-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(180deg,var(--bg-primary) 0%,var(--bg-secondary) 100%);min-height:100vh;color:var(--text-primary);transition:all .3s ease;letter-spacing:-0.011em;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 
         /* Animations */
-        @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(20px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
         @keyframes slideInLeft{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
         @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
@@ -47,8 +47,8 @@
         .animate-pulse{animation:pulse 2s ease-in-out infinite}
 
         /* Scroll Reveal Animations */
-        @keyframes revealUp{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes revealScale{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+        @keyframes revealUp{from{opacity:0;transform:translateY(50px);filter:blur(4px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+        @keyframes revealScale{from{opacity:0;transform:scale(.92);filter:blur(4px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
         @keyframes glowPulse{0%,100%{box-shadow:0 0 20px rgba(30,58,95,.15)}50%{box-shadow:0 0 40px rgba(91,138,154,.25)}}
         @keyframes marqueeScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
         @keyframes orbDrift1{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(40px,-30px) scale(1.1)}50%{transform:translate(-20px,-50px) scale(.95)}75%{transform:translate(30px,20px) scale(1.05)}}
@@ -56,8 +56,8 @@
         @keyframes orbDrift3{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,-60px)}}
         @keyframes borderGlow{0%,100%{border-color:var(--glass-border)}50%{border-color:rgba(91,138,154,.3)}}
 
-        .reveal{opacity:0;transform:translateY(50px);transition:all .8s cubic-bezier(.16,1,.3,1)}
-        .reveal.visible{opacity:1;transform:translateY(0)}
+        .reveal{opacity:0;transform:translateY(50px);transition:all .8s cubic-bezier(.16,1,.3,1);filter:blur(4px)}
+        .reveal.visible{opacity:1;transform:translateY(0);filter:blur(0);box-shadow:0 20px 60px rgba(0,0,0,.06)}
         .reveal-delay-1{transition-delay:.1s}.reveal-delay-2{transition-delay:.2s}.reveal-delay-3{transition-delay:.3s}
         .reveal-delay-4{transition-delay:.4s}.reveal-delay-5{transition-delay:.5s}
 
@@ -154,7 +154,7 @@
         .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;max-width:1200px;margin:0 auto}
         .feature-card{background:var(--bg-glass);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-radius:24px;padding:2rem;border:1px solid var(--glass-border);transition:all .4s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
         .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent-secondary));transform:scaleX(0);transition:transform .4s cubic-bezier(.16,1,.3,1)}
-        .feature-card:hover{transform:translateY(-6px);box-shadow:0 12px 40px rgba(0,0,0,.08);border-color:rgba(91,138,154,.2)}.feature-card:hover::before{transform:scaleX(1)}
+        .feature-card:hover{transform:translateY(-6px);box-shadow:0 20px 50px rgba(0,0,0,.12),0 0 20px rgba(91,138,154,.1);border-color:rgba(91,138,154,.2)}.feature-card:hover::before{transform:scaleX(1)}
         .feature-icon{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.75rem;margin-bottom:1.25rem;background:linear-gradient(135deg,var(--accent-glow),transparent)}
         .feature-card h3{font-size:1.25rem;font-weight:600;margin-bottom:.75rem}
         .feature-card p{color:var(--text-secondary);line-height:1.6}
@@ -306,7 +306,7 @@
         .ai-reduction-summary{padding:1rem 1.25rem;background:linear-gradient(135deg,var(--low-bg),var(--bg-surface));border-radius:12px;border:1px solid var(--low-text);margin-top:1rem;font-size:.95rem;color:var(--low-text);font-weight:600}
         .ai-tips-section{margin-top:1.5rem}
         .ai-tip-card{background:var(--bg-glass);backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));border-radius:16px;padding:1.5rem;border:1px solid var(--glass-border);margin-bottom:1rem;transition:all .4s cubic-bezier(.16,1,.3,1)}
-        .ai-tip-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.12)}
+        .ai-tip-card:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(0,0,0,.1),0 0 15px rgba(91,138,154,.08)}
         .ai-tip-header{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
         .ai-tip-emoji{font-size:1.5rem}
         .ai-tip-title{font-family:'Cabinet Grotesk',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text-primary)}
@@ -356,7 +356,7 @@
         .tech-tag{padding:.5rem 1rem;background:var(--bg-surface);border-radius:50px;font-size:.9rem;color:var(--text-secondary);border:1px solid var(--border);transition:all .4s cubic-bezier(.16,1,.3,1)}
         .tech-tag:hover{transform:translateY(-3px) scale(1.05);background:var(--accent-glow);color:var(--accent);border-color:var(--accent);box-shadow:0 8px 25px rgba(0,180,150,.2)}
         .about-card{transition:all .5s cubic-bezier(.16,1,.3,1)}
-        .about-card:hover{transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,.15),0 0 30px rgba(0,180,150,.08)}
+        .about-card:hover{transform:translateY(-6px);box-shadow:0 25px 60px rgba(0,0,0,.12),0 0 30px rgba(0,180,150,.06)}
         .about-card h2{position:relative;display:inline-block}
         .about-card h2::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--primary));border-radius:2px;transition:width .6s cubic-bezier(.16,1,.3,1)}
         .about-card:hover h2::after{width:100%}
@@ -564,7 +564,7 @@
     <!-- ========== SIMPLIFY ========== -->
     <div class="page" id="page-simplify">
         <div class="container" style="max-width:1000px">
-            <div class="page-header"><div class="section-label" style="justify-content:center">AI Simplify</div><h1>🤖 AI Text Simplifier <span class="ai-badge">Powered by Groq</span></h1><p>Transform complex text into easy-to-read language using AI</p></div>
+            <div class="page-header"><div class="section-label" style="justify-content:center">AI Simplify</div><h1>✨ AI Text Simplifier <span class="ai-badge">Powered by Groq</span></h1><p>Transform complex text into easy-to-read language using AI</p></div>
             <div class="input-card">
                 <div class="input-header">
                     <h3>📄 Original Text</h3>
@@ -588,7 +588,7 @@
                     <span class="input-hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> to simplify</span>
                 </div>
                 <button class="analyze-btn" id="simplifyBtn" onclick="simplifyText()" style="background:linear-gradient(135deg,#667eea,#764ba2)">
-                    <span id="simplifyBtnText">🤖 AI Simplify</span>
+                    <span id="simplifyBtnText">✨ AI Simplify</span>
                     <div class="spinner" id="simplifySpinner" style="display:none"></div>
                 </button>
             </div>
@@ -898,7 +898,7 @@
         const text = document.getElementById('simplifyInput').value.trim();
         const btn = document.getElementById('simplifyBtn');
         btn.disabled = true;
-        document.getElementById('simplifyBtnText').textContent = '🤖 AI is thinking...';
+        document.getElementById('simplifyBtnText').textContent = '✨ AI is thinking...';
         document.getElementById('simplifySpinner').style.display = 'block';
         document.getElementById('simplifyError').style.display = 'none';
         document.getElementById('simplifyOutput').classList.remove('visible');
@@ -925,7 +925,7 @@
                 hideProgress();
                 displayAISimplified(aiData, text);
                 const ms = aiData.processing_ms ? ` in ${(aiData.processing_ms/1000).toFixed(1)}s` : '';
-                showToast('success', '🤖 AI Simplified!', `${aiData.key_changes?.length || 0} key changes made${ms}`);
+                showToast('success', '✨ AI Simplified!', `${aiData.key_changes?.length || 0} key changes made${ms}`);
                 return;
             }
 
@@ -955,7 +955,7 @@
             }
         } finally {
             btn.disabled = false;
-            document.getElementById('simplifyBtnText').textContent = '🤖 AI Simplify';
+            document.getElementById('simplifyBtnText').textContent = '✨ AI Simplify';
             document.getElementById('simplifySpinner').style.display = 'none';
         }
     }
@@ -969,7 +969,7 @@
         const tokens = data._ai_meta?.tokens_used || '—';
         const speed = data.processing_ms ? (data.processing_ms/1000).toFixed(1) + 's' : '—';
         document.getElementById('simplifyStatsBar').innerHTML = `
-            <div class="simplify-stat"><div class="simplify-stat-value" style="font-size:1.2rem">🤖</div><div class="simplify-stat-label">AI-Powered</div></div>
+            <div class="simplify-stat"><div class="simplify-stat-value" style="font-size:1.2rem">✨</div><div class="simplify-stat-label">AI-Powered</div></div>
             <div class="simplify-stat"><div class="simplify-stat-value">${data.key_changes?.length || 0}</div><div class="simplify-stat-label">Key Changes</div></div>
             <div class="simplify-stat"><div class="simplify-stat-value">${speed}</div><div class="simplify-stat-label">Speed</div></div>
             <div class="simplify-stat"><div class="simplify-stat-value">${tokens}</div><div class="simplify-stat-label">Tokens Used</div></div>`;
@@ -986,7 +986,7 @@
         // AI key changes
         const cl = document.getElementById('wordChangesList');
         const section = document.getElementById('wordChangesSection');
-        section.querySelector('h4').textContent = '🤖 AI Changes Made';
+        section.querySelector('h4').textContent = '✨ AI Changes Made';
 
         if (data.key_changes && data.key_changes.length > 0) {
             cl.innerHTML = data.key_changes.map(c =>
