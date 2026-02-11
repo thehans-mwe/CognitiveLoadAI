@@ -281,11 +281,36 @@
 
         /* Study Plan */
         .study-plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
-        .plan-item{background:var(--bg-surface);padding:1.25rem;border-radius:16px;text-align:center;transition:all .2s}
-        .plan-item:hover{transform:scale(1.03)}
-        .plan-icon{font-size:1.5rem;margin-bottom:.5rem}
-        .plan-value{font-family:'Cabinet Grotesk',sans-serif;font-size:1.75rem;font-weight:700;color:var(--accent)}
-        .plan-label{font-size:.85rem;color:var(--text-secondary);margin-top:.25rem}
+        .plan-item{background:var(--bg-surface);padding:1.25rem;border-radius:16px;text-align:center;transition:all .4s cubic-bezier(.16,1,.3,1);opacity:0;transform:translateY(20px);animation:planCardIn .5s ease-out forwards;border:1px solid transparent;position:relative;overflow:hidden}
+        .plan-item::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-glow),transparent);opacity:0;transition:opacity .4s;border-radius:16px}
+        .plan-item:hover{transform:translateY(-4px) scale(1.02);border-color:var(--accent);box-shadow:0 12px 32px rgba(91,138,154,.15)}
+        .plan-item:hover::before{opacity:1}
+        .plan-item:nth-child(1){animation-delay:.05s}.plan-item:nth-child(2){animation-delay:.1s}.plan-item:nth-child(3){animation-delay:.15s}
+        .plan-item:nth-child(4){animation-delay:.2s}.plan-item:nth-child(5){animation-delay:.25s}.plan-item:nth-child(6){animation-delay:.3s}
+        @keyframes planCardIn{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+        .plan-icon{font-size:1.5rem;margin-bottom:.5rem;display:inline-block;transition:transform .4s cubic-bezier(.16,1,.3,1)}
+        .plan-item:hover .plan-icon{transform:scale(1.2) rotate(-5deg)}
+        .plan-value{font-family:'Cabinet Grotesk',sans-serif;font-size:1.75rem;font-weight:700;color:var(--accent);position:relative;z-index:1}
+        .plan-label{font-size:.85rem;color:var(--text-secondary);margin-top:.25rem;position:relative;z-index:1}
+
+        /* Study Technique Card */
+        .study-technique{margin-top:1.25rem;padding:1.25rem 1.5rem;background:linear-gradient(135deg,var(--accent-glow),var(--bg-surface));border-radius:16px;border:1px solid var(--glass-border);opacity:0;animation:planCardIn .6s ease-out .35s forwards;display:flex;align-items:flex-start;gap:1rem;transition:all .4s cubic-bezier(.16,1,.3,1)}
+        .study-technique:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(91,138,154,.12)}
+        .technique-icon{font-size:1.75rem;flex-shrink:0;animation:float 3s ease-in-out infinite}
+        .technique-content{flex:1}
+        .technique-title{font-family:'Cabinet Grotesk',sans-serif;font-size:1rem;font-weight:700;color:var(--accent);margin-bottom:.25rem}
+        .technique-desc{font-size:.9rem;color:var(--text-secondary);line-height:1.6}
+
+        /* Study Schedule Timeline */
+        .study-timeline{margin-top:1.25rem;display:flex;align-items:center;gap:0;flex-wrap:wrap;opacity:0;animation:planCardIn .6s ease-out .4s forwards}
+        .timeline-block{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:.6rem .8rem;border-radius:12px;font-size:.8rem;font-weight:600;transition:all .3s cubic-bezier(.16,1,.3,1);opacity:0;animation:timelineBlockIn .4s ease-out forwards;position:relative}
+        .timeline-block:hover{transform:translateY(-3px)}
+        @keyframes timelineBlockIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+        .timeline-block.study{background:var(--accent-glow);color:var(--accent);border:1px solid rgba(91,138,154,.2)}
+        .timeline-block.break-block{background:var(--bg-surface);color:var(--text-muted);border:1px solid var(--border)}
+        .timeline-connector{width:20px;height:2px;background:var(--border);flex-shrink:0}
+        .timeline-duration{font-family:'Cabinet Grotesk',sans-serif;font-size:1rem;font-weight:700}
+        .timeline-type{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;opacity:.8}
         .tips-list{display:flex;flex-direction:column;gap:.75rem}
         .tip-item{display:flex;align-items:flex-start;gap:.75rem;padding:1rem 1.25rem;background:var(--bg-surface);border-radius:12px;transition:all .2s}
         .tip-item:hover{background:var(--accent);color:white;transform:translateX(8px)}
@@ -405,9 +430,10 @@
             .nav-links.open{display:flex}.mobile-menu-btn{display:block}
             .hero h1{font-size:2.5rem}.results-grid{grid-template-columns:1fr}
             .study-plan-grid{grid-template-columns:repeat(2,1fr)}.review-card{flex:0 0 100%}.score-number{font-size:4rem}
+            .study-timeline{flex-wrap:wrap;gap:.5rem}.timeline-connector{display:none}.study-technique{flex-direction:column;align-items:flex-start}
             .simplify-comparison{grid-template-columns:1fr}
         }
-        @media(max-width:480px){.container{padding:1rem}.hero h1{font-size:2rem}.study-plan-grid{grid-template-columns:1fr}.btn{width:100%;justify-content:center}.export-bar{justify-content:center}}
+        @media(max-width:480px){.container{padding:1rem}.hero h1{font-size:2rem}.study-plan-grid{grid-template-columns:1fr}.btn{width:100%;justify-content:center}.export-bar{justify-content:center}.study-timeline{gap:.35rem}.timeline-block{padding:.4rem .6rem;font-size:.75rem}}
     </style>
 </head>
 <body>
@@ -579,7 +605,11 @@
                     </div>
                     <div class="result-card" id="planCard">
                         <div class="result-card-header" onclick="toggleCard('planCard')"><h3>📅 Study Plan</h3><span class="collapse-icon">▼</span></div>
-                        <div class="result-card-body"><div class="study-plan-grid" id="studyPlan"></div></div>
+                        <div class="result-card-body">
+                            <div class="study-plan-grid" id="studyPlan"></div>
+                            <div id="studyTechnique"></div>
+                            <div id="studyTimeline"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="result-card" id="tipsCard" style="margin-bottom:2rem">
@@ -929,9 +959,41 @@
             <div class="plan-item"><div class="plan-icon">⏱️</div><div class="plan-value">${fmtTime(p.total_time_mins)}</div><div class="plan-label">Total Time</div></div>
             <div class="plan-item"><div class="plan-icon">📚</div><div class="plan-value">${p.num_sessions}</div><div class="plan-label">Sessions</div></div>
             <div class="plan-item"><div class="plan-icon">🎯</div><div class="plan-value">${p.session_length} min</div><div class="plan-label">Per Session</div></div>
-            <div class="plan-item"><div class="plan-icon">☕</div><div class="plan-value">${p.break_mins}</div><div class="plan-label">Min Break</div></div>
+            <div class="plan-item"><div class="plan-icon">☕</div><div class="plan-value">${p.break_mins} min</div><div class="plan-label">Break Time</div></div>
             <div class="plan-item"><div class="plan-icon">📝</div><div class="plan-value">${p.words_per_session}</div><div class="plan-label">Words/Session</div></div>
-            <div class="plan-item"><div class="plan-icon">📄</div><div class="plan-value">${p.total_words}</div><div class="plan-label">Total Words</div></div>`;
+            <div class="plan-item"><div class="plan-icon">📖</div><div class="plan-value">${fmtTime(p.reading_time_mins)}</div><div class="plan-label">Reading Time</div></div>`;
+
+        // Study Technique
+        if (p.technique) {
+            const techEmoji = data.classification === 'High' ? '🧠' : data.classification === 'Medium' ? '📝' : '⚡';
+            document.getElementById('studyTechnique').innerHTML = `
+                <div class="study-technique">
+                    <div class="technique-icon">${techEmoji}</div>
+                    <div class="technique-content">
+                        <div class="technique-title">Recommended: ${p.technique}</div>
+                        <div class="technique-desc">${p.strategy}</div>
+                    </div>
+                </div>`;
+        }
+
+        // Study Schedule Timeline
+        if (p.schedule && p.schedule.length > 1) {
+            let timelineHTML = '<div class="study-timeline">';
+            p.schedule.forEach((block, i) => {
+                const isStudy = block.type === 'study';
+                const cls = isStudy ? 'study' : 'break-block';
+                const icon = isStudy ? '📖' : '☕';
+                const delay = (i * 0.08 + 0.5).toFixed(2);
+                timelineHTML += `<div class="timeline-block ${cls}" style="animation-delay:${delay}s">`;
+                timelineHTML += `<span class="timeline-duration">${block.duration}m</span>`;
+                timelineHTML += `<span class="timeline-type">${icon} ${block.label}</span></div>`;
+                if (i < p.schedule.length - 1) timelineHTML += '<div class="timeline-connector"></div>';
+            });
+            timelineHTML += '</div>';
+            document.getElementById('studyTimeline').innerHTML = timelineHTML;
+        } else {
+            document.getElementById('studyTimeline').innerHTML = '';
+        }
 
         // Tips
         document.getElementById('tipsList').innerHTML = data.tips.map((tip, i) => `<div class="tip-item" style="animation:slideInLeft .4s ease-out ${i*.1}s both"><span class="tip-icon">${tip.charAt(0)}</span><span>${tip.substring(2)}</span></div>`).join('');
@@ -1238,12 +1300,12 @@
         else if (fmt === 'csv') {
             const rows = [['Metric','Value','Normalized','Level']];
             Object.entries(d.features).forEach(([k, f]) => { rows.push([f.label, f.raw, Math.round(f.normalized), f.normalized < 35 ? 'Low' : f.normalized < 65 ? 'Medium' : 'High']); });
-            rows.push([], ['Overall Score', d.score, '', d.classification], ['Total Words', d.study_plan.total_words], ['Sessions', d.study_plan.num_sessions], ['Session Length', d.study_plan.session_length + ' min']);
+            rows.push([], ['Overall Score', d.score, '', d.classification], ['Total Words', d.study_plan.total_words], ['Sessions', d.study_plan.num_sessions], ['Session Length', d.study_plan.session_length + ' min'], ['Study Time', d.study_plan.study_time_mins + ' min'], ['Technique', d.study_plan.technique || '']);
             content = rows.map(r => r.join(',')).join('\n'); filename = 'cognitive-load-analysis.csv'; mime = 'text/csv';
         } else {
             const lines = ['=== CognitiveLoad AI Analysis ===', '', `Score: ${d.score}/100 (${d.classification})`, '', '--- Features ---'];
             Object.values(d.features).forEach(f => lines.push(`${f.label}: ${Math.round(f.normalized)}/100 — ${f.explanation}`));
-            lines.push('', '--- Study Plan ---', `Total: ${fmtTime(d.study_plan.total_time_mins)}`, `Sessions: ${d.study_plan.num_sessions} x ${d.study_plan.session_length} min`, `Break: ${d.study_plan.break_mins} min`, '', '--- Tips ---');
+            lines.push('', '--- Study Plan ---', `Total: ${fmtTime(d.study_plan.total_time_mins)}`, `Sessions: ${d.study_plan.num_sessions} x ${d.study_plan.session_length} min`, `Break: ${d.study_plan.break_mins} min`, `Technique: ${d.study_plan.technique || 'N/A'}`, `Strategy: ${d.study_plan.strategy || ''}`, '', '--- Tips ---');
             d.tips.forEach(t => lines.push(t));
             if (d.warnings?.length) { lines.push('', '--- Warnings ---'); d.warnings.forEach(w => lines.push(w)); }
             content = lines.join('\n'); filename = 'cognitive-load-analysis.txt'; mime = 'text/plain';

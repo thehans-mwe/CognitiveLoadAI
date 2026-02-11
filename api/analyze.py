@@ -549,31 +549,71 @@ def analyze_text(text: str) -> Dict:
     # Smarter tips based on which features scored highest
     tips = _generate_contextual_tips(classification, features, text_type)
 
-    # Study plan (improved accuracy)
+    # Study plan (v2 — improved accuracy & realism)
     reading_wpm = 200  # average reading speed
     reading_minutes = word_count / reading_wpm
 
-    # Study time includes re-reading, note-taking, comprehension pauses
-    # Higher cognitive load = more time per word
-    processing_mult = {'Low': 1.5, 'Medium': 2.5, 'High': 4.0}.get(classification, 2.5)
+    # Processing multipliers: how much longer study takes vs raw reading
+    # Accounts for re-reading, note-taking, comprehension pauses
+    processing_mult = {'Low': 2.0, 'Medium': 3.5, 'High': 5.0}.get(classification, 3.0)
     raw_study_time = reading_minutes * processing_mult
 
-    # Enforce sensible minimums based on difficulty
-    min_study_time = {'Low': 5, 'Medium': 10, 'High': 15}.get(classification, 10)
+    # Word-count-aware minimums (short texts shouldn't get inflated study times)
+    if word_count < 30:
+        min_study_time = {'Low': 1, 'Medium': 2, 'High': 3}.get(classification, 2)
+    elif word_count < 100:
+        min_study_time = {'Low': 3, 'Medium': 5, 'High': 8}.get(classification, 5)
+    elif word_count < 300:
+        min_study_time = {'Low': 5, 'Medium': 10, 'High': 15}.get(classification, 10)
+    elif word_count < 600:
+        min_study_time = {'Low': 8, 'Medium': 15, 'High': 25}.get(classification, 15)
+    else:
+        min_study_time = {'Low': 12, 'Medium': 20, 'High': 35}.get(classification, 20)
     total_study_time = max(min_study_time, raw_study_time)
 
-    # Session lengths (minutes of focused study before a break)
-    session_lengths = {'Low': (25, 35), 'Medium': (20, 25), 'High': (10, 15)}
-    min_session, max_session = session_lengths.get(classification, (20, 25))
+    # Session lengths (focused study before a break)
+    session_ranges = {'Low': (25, 35), 'Medium': (20, 30), 'High': (15, 20)}
+    min_session, max_session = session_ranges.get(classification, (20, 25))
     avg_session = (min_session + max_session) / 2
-    num_sessions = max(1, math.ceil(total_study_time / avg_session))
+
+    # Also constrain by max words per session (prevent cramming)
+    max_wps = {'Low': 500, 'Medium': 350, 'High': 200}.get(classification, 350)
+    min_sessions_by_words = max(1, math.ceil(word_count / max_wps))
+    min_sessions_by_time = max(1, math.ceil(total_study_time / max_session))
+    num_sessions = max(min_sessions_by_words, min_sessions_by_time)
 
     # Break duration
-    break_mins = 10 if classification == 'High' else (7 if classification == 'Medium' else 5)
+    break_mins = {'High': 10, 'Medium': 7, 'Low': 5}.get(classification, 7)
 
-    # Recalculate session length to evenly distribute time
-    actual_session_length = round(total_study_time / num_sessions)
+    # Calculate session length, clamped to sensible range
+    if num_sessions == 1 and total_study_time < min_session:
+        # Short text: one quick session, don't inflate to full session length
+        actual_session_length = max(1, round(total_study_time))
+    else:
+        actual_session_length = round(total_study_time / num_sessions)
+        actual_session_length = max(min_session, min(max_session, actual_session_length))
+
+    # Recalculate total study time to be consistent with sessions
+    total_study_time = actual_session_length * num_sessions
     total_with_breaks = total_study_time + max(0, num_sessions - 1) * break_mins
+
+    # Study technique recommendation based on difficulty
+    if classification == 'High':
+        technique = "Active Recall + Spaced Repetition"
+        strategy = "Read one section, close it, recall key points from memory. Review after 1 day, 3 days, and 7 days."
+    elif classification == 'Medium':
+        technique = "Note-taking + Summarization"
+        strategy = "Take notes while reading, then write a brief summary of each section in your own words."
+    else:
+        technique = "Quick Review + Self-quiz"
+        strategy = "Read through once at normal pace, then quiz yourself on the main points. Review any gaps."
+
+    # Pomodoro-style schedule
+    schedule = []
+    for i in range(num_sessions):
+        schedule.append({'type': 'study', 'duration': actual_session_length, 'label': f'Session {i+1}'})
+        if i < num_sessions - 1:
+            schedule.append({'type': 'break', 'duration': break_mins, 'label': 'Break'})
 
     study_plan = {
         'total_words': word_count,
@@ -583,7 +623,10 @@ def analyze_text(text: str) -> Dict:
         'num_sessions': num_sessions,
         'words_per_session': round(word_count / num_sessions),
         'break_mins': break_mins,
-        'total_time_mins': round(total_with_breaks, 1)
+        'total_time_mins': round(total_with_breaks, 1),
+        'technique': technique,
+        'strategy': strategy,
+        'schedule': schedule
     }
 
     # Simplify text (using precompiled patterns)
