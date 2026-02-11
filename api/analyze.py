@@ -549,22 +549,37 @@ def analyze_text(text: str) -> Dict:
     # Smarter tips based on which features scored highest
     tips = _generate_contextual_tips(classification, features, text_type)
 
-    # Study plan
-    reading_minutes = word_count / 200
-    processing_mult = {'Low': 1.2, 'Medium': 1.5, 'High': 2.0}.get(classification, 1.5)
-    total_study_time = reading_minutes * processing_mult
-    session_lengths = {'Low': (45, 60), 'Medium': (25, 30), 'High': (15, 20)}
-    min_session, max_session = session_lengths.get(classification, (25, 30))
+    # Study plan (improved accuracy)
+    reading_wpm = 200  # average reading speed
+    reading_minutes = word_count / reading_wpm
+
+    # Study time includes re-reading, note-taking, comprehension pauses
+    # Higher cognitive load = more time per word
+    processing_mult = {'Low': 1.5, 'Medium': 2.5, 'High': 4.0}.get(classification, 2.5)
+    raw_study_time = reading_minutes * processing_mult
+
+    # Enforce sensible minimums based on difficulty
+    min_study_time = {'Low': 5, 'Medium': 10, 'High': 15}.get(classification, 10)
+    total_study_time = max(min_study_time, raw_study_time)
+
+    # Session lengths (minutes of focused study before a break)
+    session_lengths = {'Low': (25, 35), 'Medium': (20, 25), 'High': (10, 15)}
+    min_session, max_session = session_lengths.get(classification, (20, 25))
     avg_session = (min_session + max_session) / 2
-    num_sessions = max(1, round(total_study_time / avg_session))
+    num_sessions = max(1, math.ceil(total_study_time / avg_session))
+
+    # Break duration
     break_mins = 10 if classification == 'High' else (7 if classification == 'Medium' else 5)
-    total_with_breaks = total_study_time + (num_sessions - 1) * break_mins
+
+    # Recalculate session length to evenly distribute time
+    actual_session_length = round(total_study_time / num_sessions)
+    total_with_breaks = total_study_time + max(0, num_sessions - 1) * break_mins
 
     study_plan = {
         'total_words': word_count,
         'reading_time_mins': round(reading_minutes, 1),
         'study_time_mins': round(total_study_time, 1),
-        'session_length': f"{min_session}-{max_session}",
+        'session_length': f"{actual_session_length}",
         'num_sessions': num_sessions,
         'words_per_session': round(word_count / num_sessions),
         'break_mins': break_mins,
