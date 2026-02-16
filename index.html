@@ -955,13 +955,18 @@
 
         // Study Plan
         const p = data.study_plan;
-        document.getElementById('studyPlan').innerHTML = `
+        const hasBreaks = p.num_sessions > 1;
+        let planHTML = `
             <div class="plan-item"><div class="plan-icon">⏱️</div><div class="plan-value">${fmtTime(p.total_time_mins)}</div><div class="plan-label">Total Time</div></div>
-            <div class="plan-item"><div class="plan-icon">📚</div><div class="plan-value">${p.num_sessions}</div><div class="plan-label">Sessions</div></div>
-            <div class="plan-item"><div class="plan-icon">🎯</div><div class="plan-value">${p.session_length} min</div><div class="plan-label">Per Session</div></div>
-            <div class="plan-item"><div class="plan-icon">☕</div><div class="plan-value">${p.break_mins} min</div><div class="plan-label">Break Time</div></div>
+            <div class="plan-item"><div class="plan-icon">📚</div><div class="plan-value">${p.num_sessions}</div><div class="plan-label">${p.num_sessions === 1 ? 'Session' : 'Sessions'}</div></div>
+            <div class="plan-item"><div class="plan-icon">🎯</div><div class="plan-value">${p.session_length} min</div><div class="plan-label">Per Session</div></div>`;
+        if (hasBreaks) {
+            planHTML += `<div class="plan-item"><div class="plan-icon">☕</div><div class="plan-value">${p.break_mins} min</div><div class="plan-label">Break Time</div></div>`;
+        }
+        planHTML += `
             <div class="plan-item"><div class="plan-icon">📝</div><div class="plan-value">${p.words_per_session}</div><div class="plan-label">Words/Session</div></div>
             <div class="plan-item"><div class="plan-icon">📖</div><div class="plan-value">${fmtTime(p.reading_time_mins)}</div><div class="plan-label">Reading Time</div></div>`;
+        document.getElementById('studyPlan').innerHTML = planHTML;
 
         // Study Technique
         if (p.technique) {
