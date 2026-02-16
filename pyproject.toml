@@ -1,0 +1,6 @@
+[project]
+name = "cognitive-load-ai"
+version = "1.0.0"
+description = "AI-powered cognitive load analyzer for study materials"
+requires-python = ">=3.9"
+dependencies = []
